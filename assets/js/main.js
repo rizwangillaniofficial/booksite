@@ -17,14 +17,37 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.fade-up').forEach(el => fadeObserver.observe(el));
 });
 
-// ---- Load Books from JSON ----
+// ---- Load Books & Categories ----
 async function loadBooks() {
   try {
+    let firestoreBooks = [];
+    let firestoreCats = [];
+    
+    // Try Firestore first if initialized
+    if (window.db) {
+      try {
+        const booksSnap = await window.db.collection('books').get();
+        booksSnap.forEach(doc => firestoreBooks.push(doc.data()));
+        
+        const catsSnap = await window.db.collection('categories').get();
+        catsSnap.forEach(doc => firestoreCats.push(doc.data()));
+        
+        if (firestoreBooks.length > 0 || firestoreCats.length > 0) {
+          console.log("Loaded from Firestore");
+          return { books: firestoreBooks, categories: firestoreCats, site: {} };
+        }
+      } catch (dbErr) {
+        console.warn("Firestore read failed, falling back to JSON:", dbErr);
+      }
+    }
+    
+    // Fallback to JSON
     const res = await fetch('data/books.json');
     const data = await res.json();
+    console.log("Loaded from local JSON");
     return data;
   } catch (e) {
-    console.error('Could not load books.json', e);
+    console.error('Could not load data', e);
     return { books: [], categories: [], site: {} };
   }
 }
