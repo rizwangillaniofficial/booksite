@@ -120,6 +120,26 @@ function loadData() {
             </td>
           </tr>
         `;
+      } else if (currentTab === 'pages') {
+        html += `
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 font-bold text-slate-800 capitalize">${id} Page</td>
+            <td class="px-6 py-4 text-sm text-slate-500">Edit text content for the ${id} page.</td>
+            <td class="px-6 py-4 text-right">
+              <button onclick="editItem('${id}')" class="px-4 py-2 bg-gray-100 text-[#006a6a] font-medium rounded-lg hover:bg-gray-200 transition-colors text-sm">Edit Content</button>
+            </td>
+          </tr>
+        `;
+      } else if (currentTab === 'settings') {
+        html += `
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 font-bold text-slate-800 capitalize">General Settings</td>
+            <td class="px-6 py-4 text-sm text-slate-500">Site title, footer, social links.</td>
+            <td class="px-6 py-4 text-right">
+              <button onclick="editItem('${id}')" class="px-4 py-2 bg-gray-100 text-[#006a6a] font-medium rounded-lg hover:bg-gray-200 transition-colors text-sm">Edit Settings</button>
+            </td>
+          </tr>
+        `;
       }
     });
     tableBody.innerHTML = html;
@@ -175,7 +195,7 @@ function openForm(docData = null, docId = null) {
 
 // Save Data
 document.getElementById('save-btn').addEventListener('click', async () => {
-  if(!window.db) return alert("Firebase not connected!");
+  if(!window.db) return showToast("Firebase not connected!", "error");
   
   let payload = {};
   
@@ -189,9 +209,9 @@ document.getElementById('save-btn').addEventListener('click', async () => {
       cover: document.getElementById('b-cover').value,
       pdf_url: document.getElementById('b-pdf').value,
       description: document.getElementById('b-desc').value,
-      id: editId || Date.now() // Simple numerical ID for backward compatibility
+      id: editId || Date.now()
     };
-    if(!payload.title || !payload.category) return alert("Title and Category required!");
+    if(!payload.title || !payload.category) return showToast("Title and Category required!", "error");
   } 
   else if (currentTab === 'categories') {
     payload = {
@@ -200,7 +220,7 @@ document.getElementById('save-btn').addEventListener('click', async () => {
       name_ur: document.getElementById('c-name-ur').value,
       icon: document.getElementById('c-icon').value
     };
-    if(!payload.id || !payload.name) return alert("ID and Name required!");
+    if(!payload.id || !payload.name) return showToast("ID and Name required!", "error");
   }
   else if (currentTab === 'gallery') {
     payload = {
@@ -208,7 +228,38 @@ document.getElementById('save-btn').addEventListener('click', async () => {
       category: document.getElementById('g-cat').value,
       url: document.getElementById('g-url').value
     };
-    if(!payload.url || !payload.title) return alert("Title and URL required!");
+    if(!payload.url || !payload.title) return showToast("Title and URL required!", "error");
+  }
+  else if (currentTab === 'pages') {
+    if (editId === 'home') {
+      payload = {
+        heroTitle: document.getElementById('p-hero-title').value,
+        heroSubtitle: document.getElementById('p-hero-sub').value
+      };
+    } else if (editId === 'about') {
+      payload = {
+        title: document.getElementById('p-about-title').value,
+        subtitle: document.getElementById('p-about-sub').value,
+        content: document.getElementById('p-about-content').value
+      };
+    } else if (editId === 'contact') {
+      payload = {
+        title: document.getElementById('p-contact-title').value,
+        subtitle: document.getElementById('p-contact-sub').value,
+        address: document.getElementById('p-contact-address').value,
+        email: document.getElementById('p-contact-email').value,
+        phone: document.getElementById('p-contact-phone').value
+      };
+    }
+  }
+  else if (currentTab === 'settings') {
+    payload = {
+      siteTitle: document.getElementById('s-title').value,
+      footerDesc: document.getElementById('s-footer').value,
+      facebookUrl: document.getElementById('s-fb').value,
+      youtubeUrl: document.getElementById('s-yt').value,
+      emailUrl: document.getElementById('s-email').value
+    };
   }
 
   const btn = document.getElementById('save-btn');
@@ -218,18 +269,19 @@ document.getElementById('save-btn').addEventListener('click', async () => {
   try {
     if (editId) {
       await window.db.collection(currentTab).doc(editId).update(payload);
+      showToast("Item updated successfully!");
     } else {
-      // For new docs, if we have an explicit string ID (like categories) use it, else auto-gen
       if(payload.id && typeof payload.id === 'string') {
         await window.db.collection(currentTab).doc(payload.id).set(payload);
       } else {
         await window.db.collection(currentTab).add(payload);
       }
+      showToast("Item created successfully!");
     }
     formModal.classList.add('hidden');
   } catch (error) {
     console.error("Error saving: ", error);
-    alert("Error saving: " + error.message);
+    showToast("Error saving: " + error.message, "error");
   } finally {
     btn.innerHTML = `Save Item`;
     btn.disabled = false;
@@ -241,13 +293,48 @@ window.editItem = async (docId) => {
   try {
     const doc = await window.db.collection(currentTab).doc(docId).get();
     if (doc.exists) openForm(doc.data(), doc.id);
-  } catch(e) { alert("Error fetching document"); }
+  } catch(e) { showToast("Error fetching document", "error"); }
 };
 
 window.deleteItem = async (docId) => {
   if(confirm("Are you sure you want to delete this item? This action cannot be undone.")) {
     try {
       await window.db.collection(currentTab).doc(docId).delete();
-    } catch(e) { alert("Error deleting: " + e.message); }
+      showToast("Item deleted successfully!");
+    } catch(e) { showToast("Error deleting: " + e.message, "error"); }
   }
 };
+
+// Toast Notifications System
+function showToast(message, type = "success") {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'fixed bottom-4 right-4 z-50 flex flex-col gap-2';
+    document.body.appendChild(container);
+  }
+  
+  const toast = document.createElement('div');
+  const bgColor = type === 'success' ? 'bg-[#006a6a]' : 'bg-red-500';
+  const icon = type === 'success' ? 'check_circle' : 'error';
+  
+  toast.className = `flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white ${bgColor} transform translate-y-10 opacity-0 transition-all duration-300 ease-out`;
+  toast.innerHTML = `
+    <span class="material-symbols-outlined">${icon}</span>
+    <span class="font-medium text-sm">${message}</span>
+  `;
+  
+  container.appendChild(toast);
+  
+  // Animate in
+  setTimeout(() => {
+    toast.classList.remove('translate-y-10', 'opacity-0');
+  }, 10);
+  
+  // Remove after 3s
+  setTimeout(() => {
+    toast.classList.add('translate-y-10', 'opacity-0');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}

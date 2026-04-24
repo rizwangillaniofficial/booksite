@@ -46,7 +46,7 @@
   const navHTML = `
 <nav id="main-nav" class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0px_20px_40px_rgba(25,28,29,0.05)] transition-colors duration-300">
   <div class="max-w-7xl mx-auto w-full flex justify-between items-center px-6 md:px-8 py-4">
-    <a href="index.html" class="text-lg md:text-xl font-bold text-slate-800 dark:text-white font-headline tracking-tight hover:opacity-80 transition-opacity flex items-center gap-2">
+    <a href="index.html" id="dyn-nav-title" class="text-lg md:text-xl font-bold text-slate-800 dark:text-white font-headline tracking-tight hover:opacity-80 transition-opacity flex items-center gap-2">
       <span class="material-symbols-outlined text-[#006A6A]" style="font-variation-settings:'FILL' 1;">auto_stories</span>
       Syed Ejaz Digital Library
     </a>
@@ -73,21 +73,21 @@
 <footer class="w-full border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 transition-colors duration-300">
   <div class="max-w-7xl mx-auto px-8 py-12 flex flex-col md:flex-row justify-between gap-12">
     <div class="mb-4 md:mb-0 max-w-sm">
-      <div class="font-headline font-bold text-lg text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+      <div id="dyn-footer-title" class="font-headline font-bold text-lg text-slate-900 dark:text-white mb-4 flex items-center gap-2">
         <span class="material-symbols-outlined text-[#006A6A]" style="font-variation-settings:'FILL' 1;">auto_stories</span>
         Syed Ejaz Digital Library
       </div>
-      <p class="text-[#454749] dark:text-slate-400 font-body text-sm leading-relaxed">
+      <p id="dyn-footer-desc" class="text-[#454749] dark:text-slate-400 font-body text-sm leading-relaxed">
         Curating knowledge, preserving heritage, and empowering the future through digital literacy.
       </p>
       <div class="flex gap-4 mt-6">
-        <a href="https://www.facebook.com/SyedEjazGillani" target="_blank" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-[#006a6a] hover:text-white transition-all">
+        <a id="dyn-social-fb" href="https://www.facebook.com/SyedEjazGillani" target="_blank" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-[#006a6a] hover:text-white transition-all">
           <span class="material-symbols-outlined text-[20px]">share</span>
         </a>
-        <a href="https://www.youtube.com/@SyedEjazGillani" target="_blank" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-[#006a6a] hover:text-white transition-all">
+        <a id="dyn-social-yt" href="https://www.youtube.com/@SyedEjazGillani" target="_blank" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-[#006a6a] hover:text-white transition-all">
           <span class="material-symbols-outlined text-[20px]">play_circle</span>
         </a>
-        <a href="mailto:info@syedejazgillani.com" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-[#006a6a] hover:text-white transition-all">
+        <a id="dyn-social-email" href="mailto:info@syedejazgillani.com" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-[#006a6a] hover:text-white transition-all">
           <span class="material-symbols-outlined text-[20px]">mail</span>
         </a>
       </div>
@@ -159,6 +159,31 @@
           navbar.classList.remove('shadow-md');
         }
       });
+    }
+
+    // Load Site Settings from Firebase
+    if (window.db) {
+      window.db.collection('settings').doc('general').get().then(doc => {
+        if (doc.exists) {
+          const s = doc.data();
+          const safeText = (id, text) => { 
+            const el = document.getElementById(id); 
+            if(el) {
+              if (el.tagName === 'A' && el.id.startsWith('dyn-social')) el.href = text;
+              else if (el.id === 'dyn-nav-title' || el.id === 'dyn-footer-title') {
+                el.innerHTML = `<span class="material-symbols-outlined text-[#006A6A]" style="font-variation-settings:'FILL' 1;">auto_stories</span> ${text}`;
+              }
+              else el.textContent = text; 
+            }
+          };
+          
+          if(s.siteTitle) { safeText('dyn-nav-title', s.siteTitle); safeText('dyn-footer-title', s.siteTitle); }
+          if(s.footerDesc) safeText('dyn-footer-desc', s.footerDesc);
+          if(s.facebookUrl) safeText('dyn-social-fb', s.facebookUrl);
+          if(s.youtubeUrl) safeText('dyn-social-yt', s.youtubeUrl);
+          if(s.emailUrl) safeText('dyn-social-email', s.emailUrl.includes('@') ? 'mailto:' + s.emailUrl : s.emailUrl);
+        }
+      }).catch(e => console.error("Error loading settings", e));
     }
   }
 

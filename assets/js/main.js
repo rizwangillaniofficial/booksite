@@ -15,7 +15,48 @@ const fadeObserver = new IntersectionObserver((entries) => {
 
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.fade-up').forEach(el => fadeObserver.observe(el));
+  loadPageContent();
 });
+
+// ---- Load Page Content (Dynamic Text) ----
+async function loadPageContent() {
+  if (!window.db) return;
+  const path = window.location.pathname;
+  let docId = '';
+  if (path.includes('index.html') || path === '/' || path.endsWith('/')) docId = 'home';
+  else if (path.includes('about.html')) docId = 'about';
+  else if (path.includes('contact.html')) docId = 'contact';
+  
+  if (!docId) return;
+
+  try {
+    const doc = await window.db.collection('pages').doc(docId).get();
+    if (doc.exists) {
+      const data = doc.data();
+      const safeText = (id, text) => { 
+        const el = document.getElementById(id); 
+        if(el) { el.textContent = text; }
+      };
+
+      if (docId === 'home') {
+        safeText('dyn-home-title', data.heroTitle);
+        safeText('dyn-home-sub', data.heroSubtitle);
+      } else if (docId === 'about') {
+        safeText('dyn-about-title', data.title);
+        safeText('dyn-about-sub', data.subtitle);
+        safeText('dyn-about-content', data.content);
+      } else if (docId === 'contact') {
+        safeText('dyn-contact-title', data.title);
+        safeText('dyn-contact-sub', data.subtitle);
+        safeText('dyn-contact-address', data.address);
+        safeText('dyn-contact-email', data.email);
+        safeText('dyn-contact-phone', data.phone);
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load page content:", err);
+  }
+}
 
 // ---- Load Books & Categories ----
 async function loadBooks() {
@@ -23,32 +64,21 @@ async function loadBooks() {
     let firestoreBooks = [];
     let firestoreCats = [];
     
-    // Try Firestore first if initialized
     if (window.db) {
-      try {
-        const booksSnap = await window.db.collection('books').get();
-        booksSnap.forEach(doc => firestoreBooks.push(doc.data()));
-        
-        const catsSnap = await window.db.collection('categories').get();
-        catsSnap.forEach(doc => firestoreCats.push(doc.data()));
-        
-        if (firestoreBooks.length > 0 || firestoreCats.length > 0) {
-          console.log("Loaded from Firestore");
-          return { books: firestoreBooks, categories: firestoreCats, site: {} };
-        }
-      } catch (dbErr) {
-        console.warn("Firestore read failed, falling back to JSON:", dbErr);
-      }
+      const booksSnap = await window.db.collection('books').get();
+      booksSnap.forEach(doc => firestoreBooks.push(doc.data()));
+      
+      const catsSnap = await window.db.collection('categories').get();
+      catsSnap.forEach(doc => firestoreCats.push(doc.data()));
+      
+      return { books: firestoreBooks, categories: firestoreCats };
+    } else {
+      console.error("Firebase not initialized!");
+      return { books: [], categories: [] };
     }
-    
-    // Fallback to JSON
-    const res = await fetch('data/books.json');
-    const data = await res.json();
-    console.log("Loaded from local JSON");
-    return data;
   } catch (e) {
-    console.error('Could not load data', e);
-    return { books: [], categories: [], site: {} };
+    console.error('Could not load data from Firestore', e);
+    return { books: [], categories: [] };
   }
 }
 
