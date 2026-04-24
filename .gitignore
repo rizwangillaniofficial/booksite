@@ -1,0 +1,21 @@
+# Stitch downloads (reference only, not needed in production)
+stitch_downloads/
+
+# Design files
+design/
+
+# Node modules
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Build scripts (already deleted but just in case)
+update_site.js
+update_site.py
+download_screens.ps1
+rebuild_site.js
