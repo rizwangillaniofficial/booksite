@@ -91,6 +91,19 @@ async function loadPageContent() {
         safeText('dyn-gallery-title', data.title || 'Gallery');
         safeText('dyn-gallery-sub', data.subtitle || 'A visual journey through our heritage and events. Exploring the depths of the Syed Ejaz Digital Library through curated artifacts and community moments.');
       }
+    } else {
+      // If document doesn't exist, seed default content for gallery
+      if (docId === 'gallery') {
+        const defaultGalleryPage = {
+          tag: 'Our Visual Heritage',
+          title: 'Gallery',
+          subtitle: 'A visual journey through our heritage and events. Exploring the depths of the Syed Ejaz Digital Library through curated artifacts and community moments.'
+        };
+        await window.db.collection('pages').doc('gallery').set(defaultGalleryPage);
+        safeText('dyn-gallery-tag', defaultGalleryPage.tag);
+        safeText('dyn-gallery-title', defaultGalleryPage.title);
+        safeText('dyn-gallery-sub', defaultGalleryPage.subtitle);
+      }
     }
   } catch (err) {
     console.error("Failed to load page content:", err);
@@ -105,7 +118,31 @@ async function initGallery() {
   try {
     const snap = await window.db.collection('gallery').get();
     let items = [];
-    snap.forEach(doc => items.push(doc.data()));
+    
+    // Seed initial gallery items if database is empty
+    if (snap.empty) {
+      const defaultItems = [
+        { title: "With Qasim Ali Shah", category: "Events", url: "https://scontent.flhe25-1.fna.fbcdn.net/v/t39.30808-6/598333741_733011743209827_3449996546459891379_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=7b2446&_nc_eui2=AeGfGl2QO2jTu_woTN1eTDHsiac_KkeA1xyJpz8qR4DXHDpNjWx-ersuToNtpJ_tqPB7iZMlgS0R0X059k21s5mt&_nc_ohc=BusyXGqc12MQ7kNvwHsjuDl&_nc_oc=AdpWC7uKnJ--8NdcD7fgVfr1T1bx8ADkGA4qL13h3Q8RmWwrskJFskxqcOtKGmt8JPs&_nc_zt=23&_nc_ht=scontent.flhe25-1.fna&_nc_gid=9O1uv-zlzAnWsisUIbZduQ&_nc_ss=7a3a8&oh=00_Af1oQZoI8XyF6IhPdIPCcXf7I4cfHkQGsmm5WxJEGwfvug&oe=69E06747" },
+        { title: "With Rubina Faisal", category: "Events", url: "https://scontent.flhe25-1.fna.fbcdn.net/v/t39.30808-6/517256608_602520922925577_8379562873143077191_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=13d280&_nc_eui2=AeEIeCJN3j-eeo8Eq1niLysKB8pHoJ319Q0HykegnfX1DVPy9S3ga1huEb9jFN-h9UpXNEU89gqZcJ7oSXT1hnwS&_nc_ohc=dW5KUjy4tJMQ7kNvwEx9eEX&_nc_oc=AdoImF8vVo-gVpJQ2jpUZE37h2V8d4aX-WeaBzUeXkhk7-mzAp5NJh-gFa3JGpJmeys&_nc_zt=23&_nc_ht=scontent.flhe25-1.fna&_nc_gid=jPG1XZixXpun6MkmlC8oFQ&_nc_ss=7a3a8&oh=00_Af15rANtxOpy3BYvIZ87IdsJSnYGq66vWZNcZZkFYCf5Cg&oe=69E05DC2" },
+        { title: "With Dr Amjid Saqib", category: "Events", url: "https://scontent.flhe25-1.fna.fbcdn.net/v/t39.30808-6/647039666_797322890112045_386960210985654729_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=7b2446&_nc_eui2=AeGowxWLNiUgnsVb1fgTPILWkkhYyyNBPe-SSFjLI0E97-skyS0hBm9YjbYUj35CzsfTVVd0cCMfBKZbNFyCz8y5&_nc_ohc=t8OAa2cxumIQ7kNvwHveqA4&_nc_oc=AdoCworxmz6e4F-p8n668kAO50tic4q6HNNHkzAfUIABFDl29ZyyA5OPSVEtoPRcgH8&_nc_zt=23&_nc_ht=scontent.flhe25-1.fna&_nc_gid=rOMN8IxBo5W48GfeBLFGiA&_nc_ss=7a3a8&oh=00_Af3bDCc-o9uQAkwqYIuHGiH69olzinOQN_TsE1iqARatHg&oe=69E05E40" },
+        { title: "With Syed Ali Haider", category: "Events", url: "https://scontent.flhe25-1.fna.fbcdn.net/v/t39.30808-6/493337915_544434982067505_1834908677159886631_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=7b2446&_nc_eui2=AeH5EPCZixzb4Vy4wHxmb-nTdPC3Q2_f5mt08LdDb9_ma2_WDEUKvmctHHU1TJOz05-sVSUQDeoVIr9N3VmrgNej&_nc_ohc=rWR1w-ICdP4Q7kNvwFTFOqR&_nc_oc=AdqSwOpOW-mhCCNn9Jc3HQ1imiKHZRp39bJkl0CCGlpkYx_XrhFgYOVz6ZvBcGDuCzU&_nc_zt=23&_nc_ht=scontent.flhe25-1.fna&_nc_gid=93KVHlWzc98whaJXz3r9cg&_nc_ss=7a3a8&oh=00_Af3f-v4zzAZQ7ZX-bO3egaOScawJuHct0WkDhpVgCGQ72Q&oe=69E09463" },
+        { title: "With Dr. Faizalat Bano", category: "Events", url: "https://scontent.flhe25-1.fna.fbcdn.net/v/t39.30808-6/491950325_540171372493866_8180168048676830072_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=7b2446&_nc_eui2=AeFbCeKwadP4eJPCySyjgidXuOpY_l-ZZxu46lj-X5lnG38HB_zqvvwv2MDHSfW50HZbgz2TtWVQmS5GWXiPYpKl&_nc_ohc=SY0Q-PNVZF8Q7kNvwESTI_1&_nc_oc=AdodjNijkj8TLjamIon8nLdXeGlp3my3lhqxoMOPb6d12Qqx9qECpZ-Kn0pQuIPmxqQ&_nc_zt=23&_nc_ht=scontent.flhe25-1.fna&_nc_gid=8_5tc4XsVaYAz9xPJ6eKkQ&_nc_ss=7a3a8&oh=00_Af1XrFVEDGbl748XLIvK_j7Z20cz1uSqnKlqvTokOc_mjQ&oe=69E07156" },
+        { title: "With Sardar Latif Khan Khosa", category: "Events", url: "https://scontent.flhe25-1.fna.fbcdn.net/v/t39.30808-6/509424731_583068884870781_5971707440883188624_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=7b2446&_nc_eui2=AeEppGwgnLtN21wtSXlKB0yNR1mFPZIYQXJHWYU9khhBcrTv-mdYb9xUoiXsLUecy-i_GxWcmE81kwFOFAjNf56H&_nc_ohc=hdgv8-HXcT4Q7kNvwEl23xL&_nc_oc=AdqNikGD5htKAxbeSUwJU3QpgMiHmgqabyPNadGWN_55F44hE3u_pFnCWpU-B-XxpyA&_nc_zt=23&_nc_ht=scontent.flhe25-1.fna&_nc_gid=OWz7MkSaSD4429LMa_QGXg&_nc_ss=7a3a8&oh=00_Af3-NR10CZ7PR9nz3pvkMAUvTgfKgbyZcwC9SqxxEE3g2g&oe=69E088CC" },
+        { title: "With Late Tajmal Kaleem", category: "Events", url: "https://scontent.flhe25-1.fna.fbcdn.net/v/t39.30808-6/534677448_631617730015896_188242810554214877_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=13d280&_nc_eui2=AeHWWmqjgDnLrw3CyzCwFPNChLW-ODSA7H2Etb44NIDsfWns0DeR4JpgCVaN3m-jGT6mz4ajO3OfW3jnPizKJL6K&_nc_ohc=PbyjBqMXIb4Q7kNvwFUhNVi&_nc_oc=Ado2uDYLP8-KHbY5UCyy6mZcerarr1V5WlxPa_9EJEaQq5tesoN8g4-xk48jPR-w-Vs&_nc_zt=23&_nc_ht=scontent.flhe25-1.fna&_nc_gid=O10RLuuh37hDA-06dQJ-4Q&_nc_ss=7a3a8&oh=00_Af0Ue5dKCRn3UkzwJLYVdPkXdrvw9Mk94rImqCRILwDdjg&oe=69E06E94" },
+        { title: "With Ikram Arefi", category: "Events", url: "https://scontent.flhe25-1.fna.fbcdn.net/v/t39.30808-6/497089659_557552677422402_5105729681853363677_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=7b2446&_nc_eui2=AeHJBOTZRZBZ8fiQlzBQyV0Ato9wXAgVCNy2j3BcCBUI3NWHHUbkeSz1KZ9KBM3bhrWlfUQg6VWFziT7pO934Vnn&_nc_ohc=P8SL0r-iWZwQ7kNvwELR_aS&_nc_oc=AdrTTvQw_Xpw4ygFPCEVPkz-3mI6FROFvL-ddUnHh1OG89PWyadHp0hCl7PeQJ8OWfc&_nc_zt=23&_nc_ht=scontent.flhe25-1.fna&_nc_gid=ar27AyZ5I51_OO-LpGhW_A&_nc_ss=7a3a8&oh=00_Af2oR1kv9yAEIugYOL6m83GBOjcCOiPSvfCRovQB1SYUsw&oe=69E0773A" }
+      ];
+      
+      const batch = window.db.batch();
+      defaultItems.forEach((item, index) => {
+        const ref = window.db.collection('gallery').doc('default_image_' + index);
+        batch.set(ref, item);
+        items.push(item); // Add to local items so they render immediately
+      });
+      await batch.commit();
+      console.log("Seeded default gallery items.");
+    } else {
+      snap.forEach(doc => items.push(doc.data()));
+    }
     
     const renderItems = (filter) => {
       let html = '';
