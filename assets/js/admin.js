@@ -44,6 +44,11 @@ window.switchTab = (tab) => {
     }
   });
   tabTitle.textContent = `Manage ${tab.charAt(0).toUpperCase() + tab.slice(1)}`;
+  if (tab === 'pages' || tab === 'settings') {
+    document.getElementById('add-new-btn').classList.add('hidden');
+  } else {
+    document.getElementById('add-new-btn').classList.remove('hidden');
+  }
   loadData();
 };
 
@@ -54,73 +59,15 @@ function loadData() {
   tableBody.innerHTML = `<tr><td colspan="3" class="px-6 py-12 text-center text-slate-400"><span class="material-symbols-outlined animate-spin">refresh</span></td></tr>`;
   
   window.db.collection(currentTab).onSnapshot(snapshot => {
-    if (snapshot.empty) {
+    if (snapshot.empty && currentTab !== 'pages' && currentTab !== 'settings') {
       tableBody.innerHTML = `<tr><td colspan="3" class="px-6 py-12 text-center text-slate-400">No data found. Add your first item!</td></tr>`;
       return;
     }
     
     let html = '';
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const id = doc.id;
-      
-      if (currentTab === 'books') {
-        html += `
-          <tr class="hover:bg-gray-50 transition-colors">
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-4">
-                <img src="${data.cover || 'assets/images/placeholder.jpg'}" class="w-12 h-16 object-cover rounded bg-gray-100 shadow-sm">
-                <div>
-                  <div class="font-bold text-slate-800">${data.title}</div>
-                  <div class="text-xs text-slate-500">${data.author}</div>
-                </div>
-              </div>
-            </td>
-            <td class="px-6 py-4">
-              <span class="inline-block px-2.5 py-1 bg-gray-100 text-xs font-semibold rounded-full text-slate-600 mb-1">${data.category}</span>
-              <div class="text-xs text-slate-400">${data.year} • ${data.language || 'Urdu'}</div>
-            </td>
-            <td class="px-6 py-4 text-right">
-              <button onclick="editItem('${id}')" class="p-2 text-slate-400 hover:text-[#006a6a] transition-colors" title="Edit"><span class="material-symbols-outlined text-[20px]">edit</span></button>
-              <button onclick="deleteItem('${id}')" class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Delete"><span class="material-symbols-outlined text-[20px]">delete</span></button>
-            </td>
-          </tr>
-        `;
-      } else if (currentTab === 'categories') {
-        html += `
-          <tr class="hover:bg-gray-50 transition-colors">
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
-                <span class="material-symbols-outlined text-2xl text-[#006a6a]">${data.icon}</span>
-                <span class="font-bold text-slate-800">${data.name}</span>
-              </div>
-            </td>
-            <td class="px-6 py-4 text-sm text-slate-500">${data.id} (ID)</td>
-            <td class="px-6 py-4 text-right">
-              <button onclick="editItem('${id}')" class="p-2 text-slate-400 hover:text-[#006a6a] transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
-              <button onclick="deleteItem('${id}')" class="p-2 text-slate-400 hover:text-red-500 transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button>
-            </td>
-          </tr>
-        `;
-      } else if (currentTab === 'gallery') {
-        html += `
-          <tr class="hover:bg-gray-50 transition-colors">
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-4">
-                <img src="${data.url}" class="w-20 h-16 object-cover rounded bg-gray-100 shadow-sm">
-                <div class="font-bold text-slate-800">${data.title}</div>
-              </div>
-            </td>
-            <td class="px-6 py-4">
-              <span class="inline-block px-2.5 py-1 bg-gray-100 text-xs font-semibold rounded-full text-slate-600">${data.category}</span>
-            </td>
-            <td class="px-6 py-4 text-right">
-              <button onclick="editItem('${id}')" class="p-2 text-slate-400 hover:text-[#006a6a] transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
-              <button onclick="deleteItem('${id}')" class="p-2 text-slate-400 hover:text-red-500 transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button>
-            </td>
-          </tr>
-        `;
-      } else if (currentTab === 'pages') {
+    
+    if (currentTab === 'pages') {
+      ['home', 'about', 'contact'].forEach(id => {
         html += `
           <tr class="hover:bg-gray-50 transition-colors">
             <td class="px-6 py-4 font-bold text-slate-800 capitalize">${id} Page</td>
@@ -130,18 +77,81 @@ function loadData() {
             </td>
           </tr>
         `;
-      } else if (currentTab === 'settings') {
-        html += `
-          <tr class="hover:bg-gray-50 transition-colors">
-            <td class="px-6 py-4 font-bold text-slate-800 capitalize">General Settings</td>
-            <td class="px-6 py-4 text-sm text-slate-500">Site title, footer, social links.</td>
-            <td class="px-6 py-4 text-right">
-              <button onclick="editItem('${id}')" class="px-4 py-2 bg-gray-100 text-[#006a6a] font-medium rounded-lg hover:bg-gray-200 transition-colors text-sm">Edit Settings</button>
-            </td>
-          </tr>
-        `;
-      }
-    });
+      });
+    } else if (currentTab === 'settings') {
+      html += `
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-6 py-4 font-bold text-slate-800 capitalize">General Settings</td>
+          <td class="px-6 py-4 text-sm text-slate-500">Site title, footer, social links.</td>
+          <td class="px-6 py-4 text-right">
+            <button onclick="editItem('general')" class="px-4 py-2 bg-gray-100 text-[#006a6a] font-medium rounded-lg hover:bg-gray-200 transition-colors text-sm">Edit Settings</button>
+          </td>
+        </tr>
+      `;
+    } else {
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const id = doc.id;
+        
+        if (currentTab === 'books') {
+          html += `
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-4">
+                  <img src="${data.cover || 'assets/images/placeholder.jpg'}" class="w-12 h-16 object-cover rounded bg-gray-100 shadow-sm">
+                  <div>
+                    <div class="font-bold text-slate-800">${data.title}</div>
+                    <div class="text-xs text-slate-500">${data.author}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <span class="inline-block px-2.5 py-1 bg-gray-100 text-xs font-semibold rounded-full text-slate-600 mb-1">${data.category}</span>
+                <div class="text-xs text-slate-400">${data.year} • ${data.language || 'Urdu'}</div>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <button onclick="editItem('${id}')" class="p-2 text-slate-400 hover:text-[#006a6a] transition-colors" title="Edit"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+                <button onclick="deleteItem('${id}')" class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Delete"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+              </td>
+            </tr>
+          `;
+        } else if (currentTab === 'categories') {
+          html += `
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <span class="material-symbols-outlined text-2xl text-[#006a6a]">${data.icon}</span>
+                  <span class="font-bold text-slate-800">${data.name}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-500">${data.id} (ID)</td>
+              <td class="px-6 py-4 text-right">
+                <button onclick="editItem('${id}')" class="p-2 text-slate-400 hover:text-[#006a6a] transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+                <button onclick="deleteItem('${id}')" class="p-2 text-slate-400 hover:text-red-500 transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+              </td>
+            </tr>
+          `;
+        } else if (currentTab === 'gallery') {
+          html += `
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-4">
+                  <img src="${data.url}" class="w-20 h-16 object-cover rounded bg-gray-100 shadow-sm">
+                  <div class="font-bold text-slate-800">${data.title}</div>
+                </div>
+              </td>
+              <td class="px-6 py-4">
+                <span class="inline-block px-2.5 py-1 bg-gray-100 text-xs font-semibold rounded-full text-slate-600">${data.category}</span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <button onclick="editItem('${id}')" class="p-2 text-slate-400 hover:text-[#006a6a] transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+                <button onclick="deleteItem('${id}')" class="p-2 text-slate-400 hover:text-red-500 transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button>
+              </td>
+            </tr>
+          `;
+        }
+      });
+    }
     tableBody.innerHTML = html;
   }, err => {
     tableBody.innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-red-500">Error loading data: ${err.message}</td></tr>`;
@@ -185,6 +195,43 @@ function openForm(docData = null, docId = null) {
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="g-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || ''}" required></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Category (Events/Family/Travel)</label><input type="text" id="g-cat" class="w-full px-3 py-2 border rounded-lg" value="${docData?.category || 'Events'}" required></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Image URL</label><input type="text" id="g-url" class="w-full px-3 py-2 border rounded-lg" value="${docData?.url || ''}" required></div>
+      </div>
+    `;
+  } else if (currentTab === 'pages') {
+    if (editId === 'home') {
+      dataForm.innerHTML = `
+        <div class="space-y-4">
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Title</label><input type="text" id="p-hero-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.heroTitle || ''}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Subtitle</label><textarea id="p-hero-sub" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.heroSubtitle || ''}</textarea></div>
+        </div>
+      `;
+    } else if (editId === 'about') {
+      dataForm.innerHTML = `
+        <div class="space-y-4">
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-about-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || ''}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-about-sub" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.subtitle || ''}</textarea></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Content</label><textarea id="p-about-content" class="w-full px-3 py-2 border rounded-lg h-40">${docData?.content || ''}</textarea></div>
+        </div>
+      `;
+    } else if (editId === 'contact') {
+      dataForm.innerHTML = `
+        <div class="space-y-4">
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-contact-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || ''}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-contact-sub" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.subtitle || ''}</textarea></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Address</label><input type="text" id="p-contact-address" class="w-full px-3 py-2 border rounded-lg" value="${docData?.address || ''}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Email</label><input type="email" id="p-contact-email" class="w-full px-3 py-2 border rounded-lg" value="${docData?.email || ''}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Phone</label><input type="text" id="p-contact-phone" class="w-full px-3 py-2 border rounded-lg" value="${docData?.phone || ''}"></div>
+        </div>
+      `;
+    }
+  } else if (currentTab === 'settings') {
+    dataForm.innerHTML = `
+      <div class="space-y-4">
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">Site Title</label><input type="text" id="s-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.siteTitle || ''}"></div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">Footer Description</label><textarea id="s-footer" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.footerDesc || ''}</textarea></div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">Facebook URL</label><input type="url" id="s-fb" class="w-full px-3 py-2 border rounded-lg" value="${docData?.facebookUrl || ''}"></div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">YouTube URL</label><input type="url" id="s-yt" class="w-full px-3 py-2 border rounded-lg" value="${docData?.youtubeUrl || ''}"></div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">Contact Email</label><input type="email" id="s-email" class="w-full px-3 py-2 border rounded-lg" value="${docData?.emailUrl || ''}"></div>
       </div>
     `;
   }
@@ -268,7 +315,7 @@ document.getElementById('save-btn').addEventListener('click', async () => {
 
   try {
     if (editId) {
-      await window.db.collection(currentTab).doc(editId).update(payload);
+      await window.db.collection(currentTab).doc(editId).set(payload, { merge: true });
       showToast("Item updated successfully!");
     } else {
       if(payload.id && typeof payload.id === 'string') {
@@ -292,7 +339,11 @@ document.getElementById('save-btn').addEventListener('click', async () => {
 window.editItem = async (docId) => {
   try {
     const doc = await window.db.collection(currentTab).doc(docId).get();
-    if (doc.exists) openForm(doc.data(), doc.id);
+    if (doc.exists) {
+      openForm(doc.data(), doc.id);
+    } else {
+      openForm({}, docId);
+    }
   } catch(e) { showToast("Error fetching document", "error"); }
 };
 
