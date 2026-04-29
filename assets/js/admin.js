@@ -175,8 +175,16 @@ function openForm(docData = null, docId = null) {
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Author</label><input type="text" id="b-author" class="w-full px-3 py-2 border rounded-lg" value="${docData?.author || 'Syed Ejaz Gillani'}" required></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Year</label><input type="text" id="b-year" class="w-full px-3 py-2 border rounded-lg" value="${docData?.year || ''}"></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Category ID</label><input type="text" id="b-cat" class="w-full px-3 py-2 border rounded-lg" value="${docData?.category || ''}" placeholder="e.g. literature" required></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Cover Image URL</label><input type="text" id="b-cover" class="w-full px-3 py-2 border rounded-lg" value="${docData?.cover || ''}" placeholder="https://..."></div>
-        <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">PDF URL</label><input type="text" id="b-pdf" class="w-full px-3 py-2 border rounded-lg" value="${docData?.pdf_url || ''}" placeholder="Leave blank if not available"></div>
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1">Cover Image URL or Upload</label>
+          <input type="text" id="b-cover" class="w-full px-3 py-2 border rounded-lg mb-2" value="${docData?.cover || ''}" placeholder="https://...">
+          <input type="file" id="b-cover-file" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#006a6a]/10 file:text-[#006a6a] hover:file:bg-[#006a6a]/20" accept="image/*">
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-bold text-slate-700 mb-1">PDF URL or Upload File</label>
+          <input type="text" id="b-pdf" class="w-full px-3 py-2 border rounded-lg mb-2" value="${docData?.pdf_url || ''}" placeholder="Leave blank if not available">
+          <input type="file" id="b-pdf-file" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#006a6a]/10 file:text-[#006a6a] hover:file:bg-[#006a6a]/20" accept="application/pdf">
+        </div>
         <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Description</label><textarea id="b-desc" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.description || ''}</textarea></div>
       </div>
     `;
@@ -194,7 +202,11 @@ function openForm(docData = null, docId = null) {
       <div class="space-y-4">
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="g-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || ''}" required></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Category (Events/Family/Travel)</label><input type="text" id="g-cat" class="w-full px-3 py-2 border rounded-lg" value="${docData?.category || 'Events'}" required></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Image URL</label><input type="text" id="g-url" class="w-full px-3 py-2 border rounded-lg" value="${docData?.url || ''}" required></div>
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1">Image URL or Upload</label>
+          <input type="text" id="g-url" class="w-full px-3 py-2 border rounded-lg mb-2" value="${docData?.url || ''}">
+          <input type="file" id="g-file" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#006a6a]/10 file:text-[#006a6a] hover:file:bg-[#006a6a]/20" accept="image/*">
+        </div>
       </div>
     `;
   } else if (currentTab === 'pages') {
@@ -241,79 +253,107 @@ function openForm(docData = null, docId = null) {
 }
 
 // Save Data
+async function uploadFile(file, folder) {
+  if (!window.storage) throw new Error("Firebase Storage not initialized");
+  const storageRef = window.storage.ref();
+  const fileRef = storageRef.child(`${folder}/${Date.now()}_${file.name}`);
+  await fileRef.put(file);
+  return await fileRef.getDownloadURL();
+}
+
 document.getElementById('save-btn').addEventListener('click', async () => {
   if(!window.db) return showToast("Firebase not connected!", "error");
   
-  let payload = {};
-  
-  if (currentTab === 'books') {
-    payload = {
-      title: document.getElementById('b-title').value,
-      title_ur: document.getElementById('b-title-ur').value,
-      author: document.getElementById('b-author').value,
-      year: document.getElementById('b-year').value,
-      category: document.getElementById('b-cat').value,
-      cover: document.getElementById('b-cover').value,
-      pdf_url: document.getElementById('b-pdf').value,
-      description: document.getElementById('b-desc').value,
-      id: editId || Date.now()
-    };
-    if(!payload.title || !payload.category) return showToast("Title and Category required!", "error");
-  } 
-  else if (currentTab === 'categories') {
-    payload = {
-      id: document.getElementById('c-id').value,
-      name: document.getElementById('c-name').value,
-      name_ur: document.getElementById('c-name-ur').value,
-      icon: document.getElementById('c-icon').value
-    };
-    if(!payload.id || !payload.name) return showToast("ID and Name required!", "error");
-  }
-  else if (currentTab === 'gallery') {
-    payload = {
-      title: document.getElementById('g-title').value,
-      category: document.getElementById('g-cat').value,
-      url: document.getElementById('g-url').value
-    };
-    if(!payload.url || !payload.title) return showToast("Title and URL required!", "error");
-  }
-  else if (currentTab === 'pages') {
-    if (editId === 'home') {
-      payload = {
-        heroTitle: document.getElementById('p-hero-title').value,
-        heroSubtitle: document.getElementById('p-hero-sub').value
-      };
-    } else if (editId === 'about') {
-      payload = {
-        title: document.getElementById('p-about-title').value,
-        subtitle: document.getElementById('p-about-sub').value,
-        content: document.getElementById('p-about-content').value
-      };
-    } else if (editId === 'contact') {
-      payload = {
-        title: document.getElementById('p-contact-title').value,
-        subtitle: document.getElementById('p-contact-sub').value,
-        address: document.getElementById('p-contact-address').value,
-        email: document.getElementById('p-contact-email').value,
-        phone: document.getElementById('p-contact-phone').value
-      };
-    }
-  }
-  else if (currentTab === 'settings') {
-    payload = {
-      siteTitle: document.getElementById('s-title').value,
-      footerDesc: document.getElementById('s-footer').value,
-      facebookUrl: document.getElementById('s-fb').value,
-      youtubeUrl: document.getElementById('s-yt').value,
-      emailUrl: document.getElementById('s-email').value
-    };
-  }
-
   const btn = document.getElementById('save-btn');
   btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Saving...`;
   btn.disabled = true;
-
+  
   try {
+    let payload = {};
+    
+    if (currentTab === 'books') {
+      let coverUrl = document.getElementById('b-cover').value;
+      const coverFile = document.getElementById('b-cover-file')?.files[0];
+      if (coverFile) {
+        btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Uploading Cover...`;
+        coverUrl = await uploadFile(coverFile, 'covers');
+      }
+
+      let pdfUrl = document.getElementById('b-pdf').value;
+      const pdfFile = document.getElementById('b-pdf-file')?.files[0];
+      if (pdfFile) {
+        btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Uploading PDF...`;
+        pdfUrl = await uploadFile(pdfFile, 'pdfs');
+      }
+
+      payload = {
+        title: document.getElementById('b-title').value,
+        title_ur: document.getElementById('b-title-ur').value,
+        author: document.getElementById('b-author').value,
+        year: document.getElementById('b-year').value,
+        category: document.getElementById('b-cat').value,
+        cover: coverUrl,
+        pdf_url: pdfUrl,
+        description: document.getElementById('b-desc').value,
+        id: editId || Date.now().toString()
+      };
+      if(!payload.title || !payload.category) throw new Error("Title and Category required!");
+    } 
+    else if (currentTab === 'categories') {
+      payload = {
+        id: document.getElementById('c-id').value,
+        name: document.getElementById('c-name').value,
+        name_ur: document.getElementById('c-name-ur').value,
+        icon: document.getElementById('c-icon').value
+      };
+      if(!payload.id || !payload.name) throw new Error("ID and Name required!");
+    }
+    else if (currentTab === 'gallery') {
+      let imgUrl = document.getElementById('g-url').value;
+      const imgFile = document.getElementById('g-file')?.files[0];
+      if (imgFile) {
+        btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Uploading Image...`;
+        imgUrl = await uploadFile(imgFile, 'gallery');
+      }
+      
+      payload = {
+        title: document.getElementById('g-title').value,
+        category: document.getElementById('g-cat').value,
+        url: imgUrl
+      };
+      if(!payload.url || !payload.title) throw new Error("Title and URL required!");
+    }
+    else if (currentTab === 'pages') {
+      if (editId === 'home') {
+        payload = {
+          heroTitle: document.getElementById('p-hero-title').value,
+          heroSubtitle: document.getElementById('p-hero-sub').value
+        };
+      } else if (editId === 'about') {
+        payload = {
+          title: document.getElementById('p-about-title').value,
+          subtitle: document.getElementById('p-about-sub').value,
+          content: document.getElementById('p-about-content').value
+        };
+      } else if (editId === 'contact') {
+        payload = {
+          title: document.getElementById('p-contact-title').value,
+          subtitle: document.getElementById('p-contact-sub').value,
+          address: document.getElementById('p-contact-address').value,
+          email: document.getElementById('p-contact-email').value,
+          phone: document.getElementById('p-contact-phone').value
+        };
+      }
+    }
+    else if (currentTab === 'settings') {
+      payload = {
+        siteTitle: document.getElementById('s-title').value,
+        footerDesc: document.getElementById('s-footer').value,
+        facebookUrl: document.getElementById('s-fb').value,
+        youtubeUrl: document.getElementById('s-yt').value,
+        emailUrl: document.getElementById('s-email').value
+      };
+    }
     if (editId) {
       await window.db.collection(currentTab).doc(editId).set(payload, { merge: true });
       showToast("Item updated successfully!");

@@ -15,4 +15,7 @@ if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
   }
   window.db = firebase.firestore();
+  if (firebase.storage) {
+    window.storage = firebase.storage();
+  }
 }
