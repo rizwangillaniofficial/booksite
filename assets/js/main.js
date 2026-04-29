@@ -35,7 +35,7 @@ async function loadPageContent() {
       const data = doc.data();
       const safeText = (id, text) => { 
         const el = document.getElementById(id); 
-        if(el) { el.textContent = text; }
+        if(el) { el.innerHTML = text; }
       };
 
       if (docId === 'home') {

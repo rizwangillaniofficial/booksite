@@ -44,10 +44,14 @@ window.switchTab = (tab) => {
     }
   });
   tabTitle.textContent = `Manage ${tab.charAt(0).toUpperCase() + tab.slice(1)}`;
+  
+  const tabSubtitle = tabTitle.nextElementSibling;
   if (tab === 'pages' || tab === 'settings') {
     document.getElementById('add-new-btn').classList.add('hidden');
+    tabSubtitle.textContent = 'Edit existing content and configuration for your site.';
   } else {
     document.getElementById('add-new-btn').classList.remove('hidden');
+    tabSubtitle.textContent = 'Add, edit, or delete items from your database.';
   }
   loadData();
 };
@@ -160,8 +164,14 @@ function loadData() {
 
 // Modal Form Logic
 document.getElementById('add-new-btn').addEventListener('click', () => openForm());
-document.getElementById('close-modal').addEventListener('click', () => formModal.classList.add('hidden'));
-document.getElementById('cancel-btn').addEventListener('click', () => formModal.classList.add('hidden'));
+document.getElementById('close-modal').addEventListener('click', () => {
+  if (typeof tinymce !== 'undefined') tinymce.remove();
+  formModal.classList.add('hidden');
+});
+document.getElementById('cancel-btn').addEventListener('click', () => {
+  if (typeof tinymce !== 'undefined') tinymce.remove();
+  formModal.classList.add('hidden');
+});
 
 function openForm(docData = null, docId = null) {
   editId = docId;
@@ -185,7 +195,7 @@ function openForm(docData = null, docId = null) {
           <input type="text" id="b-pdf" class="w-full px-3 py-2 border rounded-lg mb-2" value="${docData?.pdf_url || ''}" placeholder="Leave blank if not available">
           <input type="file" id="b-pdf-file" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#006a6a]/10 file:text-[#006a6a] hover:file:bg-[#006a6a]/20" accept="application/pdf">
         </div>
-        <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Description</label><textarea id="b-desc" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.description || ''}</textarea></div>
+        <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Description</label><textarea id="b-desc" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.description || ''}</textarea></div>
       </div>
     `;
   } else if (currentTab === 'categories') {
@@ -214,22 +224,22 @@ function openForm(docData = null, docId = null) {
       dataForm.innerHTML = `
         <div class="space-y-4">
           <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Title</label><input type="text" id="p-hero-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.heroTitle || ''}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Subtitle</label><textarea id="p-hero-sub" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.heroSubtitle || ''}</textarea></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Subtitle</label><textarea id="p-hero-sub" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.heroSubtitle || ''}</textarea></div>
         </div>
       `;
     } else if (editId === 'about') {
       dataForm.innerHTML = `
         <div class="space-y-4">
           <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-about-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || ''}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-about-sub" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.subtitle || ''}</textarea></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Content</label><textarea id="p-about-content" class="w-full px-3 py-2 border rounded-lg h-40">${docData?.content || ''}</textarea></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-about-sub" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.subtitle || ''}</textarea></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Content</label><textarea id="p-about-content" class="w-full px-3 py-2 border rounded-lg h-40 rich-text">${docData?.content || ''}</textarea></div>
         </div>
       `;
     } else if (editId === 'contact') {
       dataForm.innerHTML = `
         <div class="space-y-4">
           <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-contact-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || ''}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-contact-sub" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.subtitle || ''}</textarea></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-contact-sub" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.subtitle || ''}</textarea></div>
           <div><label class="block text-sm font-bold text-slate-700 mb-1">Address</label><input type="text" id="p-contact-address" class="w-full px-3 py-2 border rounded-lg" value="${docData?.address || ''}"></div>
           <div><label class="block text-sm font-bold text-slate-700 mb-1">Email</label><input type="email" id="p-contact-email" class="w-full px-3 py-2 border rounded-lg" value="${docData?.email || ''}"></div>
           <div><label class="block text-sm font-bold text-slate-700 mb-1">Phone</label><input type="text" id="p-contact-phone" class="w-full px-3 py-2 border rounded-lg" value="${docData?.phone || ''}"></div>
@@ -240,7 +250,7 @@ function openForm(docData = null, docId = null) {
     dataForm.innerHTML = `
       <div class="space-y-4">
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Site Title</label><input type="text" id="s-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.siteTitle || ''}"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Footer Description</label><textarea id="s-footer" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.footerDesc || ''}</textarea></div>
+        <div><label class="block text-sm font-bold text-slate-700 mb-1">Footer Description</label><textarea id="s-footer" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.footerDesc || ''}</textarea></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Facebook URL</label><input type="url" id="s-fb" class="w-full px-3 py-2 border rounded-lg" value="${docData?.facebookUrl || ''}"></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">YouTube URL</label><input type="url" id="s-yt" class="w-full px-3 py-2 border rounded-lg" value="${docData?.youtubeUrl || ''}"></div>
         <div><label class="block text-sm font-bold text-slate-700 mb-1">Contact Email</label><input type="email" id="s-email" class="w-full px-3 py-2 border rounded-lg" value="${docData?.emailUrl || ''}"></div>
@@ -250,6 +260,25 @@ function openForm(docData = null, docId = null) {
   
   formModal.classList.remove('hidden');
   formModal.classList.add('flex');
+
+  // Initialize TinyMCE for rich text areas
+  if (typeof tinymce !== 'undefined') {
+    tinymce.remove();
+    tinymce.init({
+      selector: 'textarea.rich-text',
+      menubar: false,
+      plugins: 'lists link image code table formatpainter',
+      toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | link image | code',
+      height: 300,
+      skin: "oxide",
+      content_css: "default",
+      setup: function (editor) {
+        editor.on('change', function () {
+          editor.save();
+        });
+      }
+    });
+  }
 }
 
 // Save Data
@@ -263,6 +292,7 @@ async function uploadFile(file, folder) {
 
 document.getElementById('save-btn').addEventListener('click', async () => {
   if(!window.db) return showToast("Firebase not connected!", "error");
+  if (typeof tinymce !== 'undefined') tinymce.triggerSave();
   
   const btn = document.getElementById('save-btn');
   btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Saving...`;
