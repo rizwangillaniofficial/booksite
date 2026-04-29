@@ -223,7 +223,12 @@ function openForm(docData = null, docId = null) {
     if (editId === 'home') {
       dataForm.innerHTML = `
         <div class="space-y-4">
-          <h4 class="font-bold text-lg border-b pb-2 text-secondary">Hero Section</h4>
+          <h4 class="font-bold text-lg border-b pb-2 text-secondary">Images</h4>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Image</label><input type="file" id="p-img-hero" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-secondary/10 file:text-secondary"><p class="text-xs text-slate-500 mt-1">Current: ${docData?.imgHero ? '<a href="'+docData.imgHero+'" target="_blank" class="text-secondary underline">View Image</a>' : 'Default'}</p></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Archive Image</label><input type="file" id="p-img-archive" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-secondary/10 file:text-secondary"><p class="text-xs text-slate-500 mt-1">Current: ${docData?.imgArchive ? '<a href="'+docData.imgArchive+'" target="_blank" class="text-secondary underline">View Image</a>' : 'Default'}</p></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Library Image</label><input type="file" id="p-img-library" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-secondary/10 file:text-secondary"><p class="text-xs text-slate-500 mt-1">Current: ${docData?.imgLibrary ? '<a href="'+docData.imgLibrary+'" target="_blank" class="text-secondary underline">View Image</a>' : 'Default'}</p></div>
+
+          <h4 class="font-bold text-lg border-b pb-2 text-secondary mt-6">Hero Section</h4>
           <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Title</label><input type="text" id="p-hero-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.heroTitle || 'Syed Ejaz Gillani'}"></div>
           <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Subtitle</label><textarea id="p-hero-sub" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.heroSubtitle || 'A Pakistani Canadian writer...'}</textarea></div>
           
@@ -260,19 +265,40 @@ function openForm(docData = null, docId = null) {
     } else if (editId === 'about') {
       dataForm.innerHTML = `
         <div class="space-y-4">
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-about-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || ''}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-about-sub" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.subtitle || ''}</textarea></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Content</label><textarea id="p-about-content" class="w-full px-3 py-2 border rounded-lg h-40 rich-text">${docData?.content || ''}</textarea></div>
+          <h4 class="font-bold text-lg border-b pb-2 text-secondary">Hero Bio</h4>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Profile Image</label><input type="file" id="p-img-profile" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-secondary/10 file:text-secondary"><p class="text-xs text-slate-500 mt-1">Current: ${docData?.imgProfile ? '<a href="'+docData.imgProfile+'" target="_blank" class="text-secondary underline">View Image</a>' : 'Default'}</p></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Tag</label><input type="text" id="p-about-tag" class="w-full px-3 py-2 border rounded-lg" value="${docData?.heroTag || 'Founder'}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Name</label><input type="text" id="p-about-hero-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.heroTitle || 'Syed Ejaz Gillani'}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Bio (Rich Text)</label><textarea id="p-about-bio" class="w-full px-3 py-2 border rounded-lg h-64 rich-text">${docData?.heroBio || ''}</textarea></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Quote</label><textarea id="p-about-quote" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.quote || '"Knowledge is a universal heritage, and digital preservation is our duty to the future."'}</textarea></div>
+          
+          <h4 class="font-bold text-lg border-b pb-2 mt-6 text-secondary">Our Story</h4>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-about-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || 'Our Story'}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-about-sub" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.subtitle || ''}</textarea></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Story Content</label><textarea id="p-about-content" class="w-full px-3 py-2 border rounded-lg h-40 rich-text">${docData?.content || 'Founded on the principle that knowledge is a universal heritage...'}</textarea></div>
+
+          <h4 class="font-bold text-lg border-b pb-2 mt-6 text-secondary">Mission & Vision</h4>
+          <div class="grid grid-cols-1 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Mission Title</label><input type="text" id="p-miss-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.missionTitle || 'Mission'}"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Mission Text</label><textarea id="p-miss-text" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.missionText || 'To democratize access to the world\'s scholarly and cultural knowledge...'}</textarea></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Vision Title</label><input type="text" id="p-vis-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.visionTitle || 'Vision'}"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Vision Text</label><textarea id="p-vis-text" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.visionText || 'To become the preeminent global archive for digital wisdom...'}</textarea></div>
+          </div>
         </div>
       `;
     } else if (editId === 'contact') {
       dataForm.innerHTML = `
         <div class="space-y-4">
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-contact-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || ''}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-contact-sub" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.subtitle || ''}</textarea></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Address</label><input type="text" id="p-contact-address" class="w-full px-3 py-2 border rounded-lg" value="${docData?.address || ''}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Email</label><input type="email" id="p-contact-email" class="w-full px-3 py-2 border rounded-lg" value="${docData?.email || ''}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Phone</label><input type="text" id="p-contact-phone" class="w-full px-3 py-2 border rounded-lg" value="${docData?.phone || ''}"></div>
+          <h4 class="font-bold text-lg border-b pb-2 text-secondary">Images</h4>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Accent Image (Gallery Link)</label><input type="file" id="p-img-accent" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-secondary/10 file:text-secondary"><p class="text-xs text-slate-500 mt-1">Current: ${docData?.imgAccent ? '<a href="'+docData.imgAccent+'" target="_blank" class="text-secondary underline">View Image</a>' : 'Default'}</p></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Map Image</label><input type="file" id="p-img-map" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-secondary/10 file:text-secondary"><p class="text-xs text-slate-500 mt-1">Current: ${docData?.imgMap ? '<a href="'+docData.imgMap+'" target="_blank" class="text-secondary underline">View Image</a>' : 'Default'}</p></div>
+
+          <h4 class="font-bold text-lg border-b pb-2 text-secondary mt-6">Contact Info</h4>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-contact-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || 'Let\'s Connect with the Archive.'}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-contact-sub" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.subtitle || 'Have a question about our collections or need assistance with digital access?'}</textarea></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Address</label><textarea id="p-contact-address" class="w-full px-3 py-2 border rounded-lg rich-text">${docData?.address || '123 Library Lane, Academic District\\nDigital City, DC 45678'}</textarea></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Email</label><input type="email" id="p-contact-email" class="w-full px-3 py-2 border rounded-lg" value="${docData?.email || 'support@syedejazlibrary.com'}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Phone</label><input type="text" id="p-contact-phone" class="w-full px-3 py-2 border rounded-lg" value="${docData?.phone || '+1 (555) 012-3456'}"></div>
         </div>
       `;
     }
@@ -384,8 +410,28 @@ document.getElementById('save-btn').addEventListener('click', async () => {
       if(!payload.url || !payload.title) throw new Error("Title and URL required!");
     }
     else if (currentTab === 'pages') {
+      let currentDoc = {};
+      try {
+        const docRes = await window.db.collection('pages').doc(editId).get();
+        if (docRes.exists) currentDoc = docRes.data();
+      } catch (e) {}
+
       if (editId === 'home') {
+        let imgHeroUrl = currentDoc.imgHero || '';
+        let imgArchiveUrl = currentDoc.imgArchive || '';
+        let imgLibraryUrl = currentDoc.imgLibrary || '';
+        
+        const fHero = document.getElementById('p-img-hero')?.files[0];
+        if (fHero) { btn.innerHTML = `Uploading Hero Image...`; imgHeroUrl = await uploadFile(fHero, 'pages'); }
+        const fArchive = document.getElementById('p-img-archive')?.files[0];
+        if (fArchive) { btn.innerHTML = `Uploading Archive Image...`; imgArchiveUrl = await uploadFile(fArchive, 'pages'); }
+        const fLibrary = document.getElementById('p-img-library')?.files[0];
+        if (fLibrary) { btn.innerHTML = `Uploading Library Image...`; imgLibraryUrl = await uploadFile(fLibrary, 'pages'); }
+
         payload = {
+          imgHero: imgHeroUrl,
+          imgArchive: imgArchiveUrl,
+          imgLibrary: imgLibraryUrl,
           heroTitle: document.getElementById('p-hero-title').value,
           heroSubtitle: document.getElementById('p-hero-sub').value,
           newArrivalTag: document.getElementById('p-new-tag').value,
@@ -405,13 +451,36 @@ document.getElementById('save-btn').addEventListener('click', async () => {
           newsletterSub: document.getElementById('p-news-sub').value
         };
       } else if (editId === 'about') {
+        let imgProfileUrl = currentDoc.imgProfile || '';
+        const fProfile = document.getElementById('p-img-profile')?.files[0];
+        if (fProfile) { btn.innerHTML = `Uploading Profile Image...`; imgProfileUrl = await uploadFile(fProfile, 'pages'); }
+
         payload = {
+          imgProfile: imgProfileUrl,
+          heroTag: document.getElementById('p-about-tag').value,
+          heroTitle: document.getElementById('p-about-hero-title').value,
+          heroBio: document.getElementById('p-about-bio').value,
+          quote: document.getElementById('p-about-quote').value,
           title: document.getElementById('p-about-title').value,
           subtitle: document.getElementById('p-about-sub').value,
-          content: document.getElementById('p-about-content').value
+          content: document.getElementById('p-about-content').value,
+          missionTitle: document.getElementById('p-miss-title').value,
+          missionText: document.getElementById('p-miss-text').value,
+          visionTitle: document.getElementById('p-vis-title').value,
+          visionText: document.getElementById('p-vis-text').value
         };
       } else if (editId === 'contact') {
+        let imgAccentUrl = currentDoc.imgAccent || '';
+        let imgMapUrl = currentDoc.imgMap || '';
+        
+        const fAccent = document.getElementById('p-img-accent')?.files[0];
+        if (fAccent) { btn.innerHTML = `Uploading Accent Image...`; imgAccentUrl = await uploadFile(fAccent, 'pages'); }
+        const fMap = document.getElementById('p-img-map')?.files[0];
+        if (fMap) { btn.innerHTML = `Uploading Map Image...`; imgMapUrl = await uploadFile(fMap, 'pages'); }
+
         payload = {
+          imgAccent: imgAccentUrl,
+          imgMap: imgMapUrl,
           title: document.getElementById('p-contact-title').value,
           subtitle: document.getElementById('p-contact-sub').value,
           address: document.getElementById('p-contact-address').value,

@@ -35,7 +35,11 @@ async function loadPageContent() {
       const data = doc.data();
       const safeText = (id, text) => { 
         const el = document.getElementById(id); 
-        if(el) { el.innerHTML = text; }
+        if(el && text) { el.innerHTML = text; }
+      };
+      const updateImage = (id, url) => {
+        const el = document.getElementById(id);
+        if (el && url) el.src = url;
       };
 
       if (docId === 'home') {
@@ -56,16 +60,30 @@ async function loadPageContent() {
         safeText('dyn-home-cat-sub', data.categoriesSub || 'Explore our diverse collection across various genres and specialized academic disciplines.');
         safeText('dyn-home-news-title', data.newsletterTitle || 'Stay Updated with New Archives');
         safeText('dyn-home-news-sub', data.newsletterSub || 'Join our monthly newsletter to receive updates on newly digitized historical collections and featured readings.');
+        updateImage('dyn-home-img-hero', data.imgHero);
+        updateImage('dyn-home-img-archive', data.imgArchive);
+        updateImage('dyn-home-img-library', data.imgLibrary);
       } else if (docId === 'about') {
-        safeText('dyn-about-title', data.title);
-        safeText('dyn-about-sub', data.subtitle);
-        safeText('dyn-about-content', data.content);
+        safeText('dyn-about-tag', data.heroTag || 'Founder');
+        safeText('dyn-about-title-main', data.heroTitle || 'Syed Ejaz Gillani');
+        if(data.heroBio) safeText('dyn-about-bio', data.heroBio);
+        safeText('dyn-about-quote', data.quote || '"Knowledge is a universal heritage, and digital preservation is our duty to the future."');
+        safeText('dyn-about-title', data.title || 'Our Story');
+        safeText('dyn-about-sub', data.subtitle || '');
+        safeText('dyn-about-content', data.content || 'Founded on the principle that knowledge is a universal heritage...');
+        safeText('dyn-about-miss-title', data.missionTitle || 'Mission');
+        safeText('dyn-about-miss-text', data.missionText || 'To democratize access to the world\'s scholarly and cultural knowledge...');
+        safeText('dyn-about-vis-title', data.visionTitle || 'Vision');
+        safeText('dyn-about-vis-text', data.visionText || 'To become the preeminent global archive for digital wisdom...');
+        updateImage('dyn-about-img-profile', data.imgProfile);
       } else if (docId === 'contact') {
-        safeText('dyn-contact-title', data.title);
-        safeText('dyn-contact-sub', data.subtitle);
-        safeText('dyn-contact-address', data.address);
-        safeText('dyn-contact-email', data.email);
-        safeText('dyn-contact-phone', data.phone);
+        safeText('dyn-contact-title', data.title || 'Let\'s Connect with the Archive.');
+        safeText('dyn-contact-sub', data.subtitle || 'Have a question about our collections or need assistance with digital access?');
+        safeText('dyn-contact-address', data.address || '123 Library Lane, Academic District<br>Digital City, DC 45678');
+        safeText('dyn-contact-email', data.email || 'support@syedejazlibrary.com');
+        safeText('dyn-contact-phone', data.phone || '+1 (555) 012-3456');
+        updateImage('dyn-contact-img-accent', data.imgAccent);
+        updateImage('dyn-contact-img-map', data.imgMap);
       }
     }
   } catch (err) {
