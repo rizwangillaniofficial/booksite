@@ -87,7 +87,7 @@ function renderBookCard(book) {
   return `
     <div class="book-card bg-white dark:bg-slate-800 rounded-xl overflow-hidden flex flex-col h-full shadow-sm border border-gray-100 dark:border-slate-700">
       <div class="relative overflow-hidden aspect-[2/3] bg-gray-50 dark:bg-slate-700 flex items-center justify-center">
-        <img src="${book.cover || 'assets/images/placeholder.jpg'}" alt="${book.title}" class="w-full h-full object-contain" onerror="this.src='assets/images/placeholder.jpg'">
+        <img src="${book.cover || 'assets/images/placeholder.jpg'}" alt="${book.title}" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='assets/images/placeholder.jpg';">
         <span class="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest bg-[#006a6a] text-white px-3 py-1 rounded-full">${book.category}</span>
       </div>
       <div class="flex flex-col flex-grow p-5">
