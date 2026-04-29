@@ -223,8 +223,38 @@ function openForm(docData = null, docId = null) {
     if (editId === 'home') {
       dataForm.innerHTML = `
         <div class="space-y-4">
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Title</label><input type="text" id="p-hero-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.heroTitle || ''}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Subtitle</label><textarea id="p-hero-sub" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.heroSubtitle || ''}</textarea></div>
+          <h4 class="font-bold text-lg border-b pb-2 text-secondary">Hero Section</h4>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Title</label><input type="text" id="p-hero-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.heroTitle || 'Syed Ejaz Gillani'}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Subtitle</label><textarea id="p-hero-sub" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.heroSubtitle || 'A Pakistani Canadian writer...'}</textarea></div>
+          
+          <h4 class="font-bold text-lg border-b pb-2 mt-6 text-secondary">Floating Card</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Tag (e.g. New Arrival)</label><input type="text" id="p-new-tag" class="w-full px-3 py-2 border rounded-lg" value="${docData?.newArrivalTag || 'New Arrival'}"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Author / Sub</label><input type="text" id="p-new-author" class="w-full px-3 py-2 border rounded-lg" value="${docData?.newArrivalAuthor || 'by Syed Ejaz Gillani'}"></div>
+            <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-new-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.newArrivalTitle || 'Uncover the Latest in Knowledge'}"></div>
+          </div>
+
+          <h4 class="font-bold text-lg border-b pb-2 mt-6 text-secondary">About Section</h4>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-about-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.aboutTitle || 'Read More, Learn More, Grow More'}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Text Content</label><textarea id="p-about-text" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.aboutText || 'Syed Ejaz Digital Library is more than just a collection of books...'}</textarea></div>
+          <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Stat 1 Number</label><input type="text" id="p-stat1-num" class="w-full px-3 py-2 border rounded-lg" value="${docData?.stat1Num || '7+'}"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Stat 1 Label</label><input type="text" id="p-stat1-text" class="w-full px-3 py-2 border rounded-lg" value="${docData?.stat1Text || 'Digital Books'}"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Stat 2 Number</label><input type="text" id="p-stat2-num" class="w-full px-3 py-2 border rounded-lg" value="${docData?.stat2Num || '120+'}"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Stat 2 Label</label><input type="text" id="p-stat2-text" class="w-full px-3 py-2 border rounded-lg" value="${docData?.stat2Text || 'Global Archives'}"></div>
+          </div>
+
+          <h4 class="font-bold text-lg border-b pb-2 mt-6 text-secondary">Other Headings</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Featured Books Subtitle</label><input type="text" id="p-feat-sub" class="w-full px-3 py-2 border rounded-lg" value="${docData?.featuredSub || 'Our Curated Selection'}"></div>
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Featured Books Title</label><input type="text" id="p-feat-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.featuredTitle || 'Featured Books'}"></div>
+            
+            <div><label class="block text-sm font-bold text-slate-700 mb-1">Categories Title</label><input type="text" id="p-cat-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.categoriesTitle || 'Browse by Category'}"></div>
+            <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Categories Subtitle</label><input type="text" id="p-cat-sub" class="w-full px-3 py-2 border rounded-lg" value="${docData?.categoriesSub || 'Explore our diverse collection across various genres and specialized academic disciplines.'}"></div>
+            
+            <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Newsletter Title</label><input type="text" id="p-news-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.newsletterTitle || 'Stay Updated with New Archives'}"></div>
+            <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Newsletter Subtitle</label><input type="text" id="p-news-sub" class="w-full px-3 py-2 border rounded-lg" value="${docData?.newsletterSub || 'Join our monthly newsletter to receive updates on newly digitized historical collections and featured readings.'}"></div>
+          </div>
         </div>
       `;
     } else if (editId === 'about') {
@@ -357,7 +387,22 @@ document.getElementById('save-btn').addEventListener('click', async () => {
       if (editId === 'home') {
         payload = {
           heroTitle: document.getElementById('p-hero-title').value,
-          heroSubtitle: document.getElementById('p-hero-sub').value
+          heroSubtitle: document.getElementById('p-hero-sub').value,
+          newArrivalTag: document.getElementById('p-new-tag').value,
+          newArrivalTitle: document.getElementById('p-new-title').value,
+          newArrivalAuthor: document.getElementById('p-new-author').value,
+          aboutTitle: document.getElementById('p-about-title').value,
+          aboutText: document.getElementById('p-about-text').value,
+          stat1Num: document.getElementById('p-stat1-num').value,
+          stat1Text: document.getElementById('p-stat1-text').value,
+          stat2Num: document.getElementById('p-stat2-num').value,
+          stat2Text: document.getElementById('p-stat2-text').value,
+          featuredSub: document.getElementById('p-feat-sub').value,
+          featuredTitle: document.getElementById('p-feat-title').value,
+          categoriesTitle: document.getElementById('p-cat-title').value,
+          categoriesSub: document.getElementById('p-cat-sub').value,
+          newsletterTitle: document.getElementById('p-news-title').value,
+          newsletterSub: document.getElementById('p-news-sub').value
         };
       } else if (editId === 'about') {
         payload = {

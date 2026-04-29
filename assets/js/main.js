@@ -39,8 +39,23 @@ async function loadPageContent() {
       };
 
       if (docId === 'home') {
-        safeText('dyn-home-title', data.heroTitle);
-        safeText('dyn-home-sub', data.heroSubtitle);
+        safeText('dyn-home-title', data.heroTitle || 'Syed Ejaz Gillani');
+        safeText('dyn-home-sub', data.heroSubtitle || 'A Pakistani Canadian writer, blogger & Community Coordinator. promoting infos. languages & cultures.');
+        safeText('dyn-home-new-tag', data.newArrivalTag || 'New Arrival');
+        safeText('dyn-home-new-title', data.newArrivalTitle || 'Uncover the Latest in Knowledge');
+        safeText('dyn-home-new-author', data.newArrivalAuthor || 'by Syed Ejaz Gillani');
+        safeText('dyn-home-about-title', data.aboutTitle || 'Read More, Learn More, Grow More');
+        safeText('dyn-home-about-text', data.aboutText || 'Syed Ejaz Digital Library is more than just a collection of books — it is a platform built to share knowledge, ideas, and learning resources with a wider audience. Our mission is to provide easy access to quality digital books and help readers explore content that supports education, awareness, and lifelong learning.');
+        safeText('dyn-home-stat1-num', data.stat1Num || '7+');
+        safeText('dyn-home-stat1-text', data.stat1Text || 'Digital Books');
+        safeText('dyn-home-stat2-num', data.stat2Num || '120+');
+        safeText('dyn-home-stat2-text', data.stat2Text || 'Global Archives');
+        safeText('dyn-home-feat-sub', data.featuredSub || 'Our Curated Selection');
+        safeText('dyn-home-feat-title', data.featuredTitle || 'Featured Books');
+        safeText('dyn-home-cat-title', data.categoriesTitle || 'Browse by Category');
+        safeText('dyn-home-cat-sub', data.categoriesSub || 'Explore our diverse collection across various genres and specialized academic disciplines.');
+        safeText('dyn-home-news-title', data.newsletterTitle || 'Stay Updated with New Archives');
+        safeText('dyn-home-news-sub', data.newsletterSub || 'Join our monthly newsletter to receive updates on newly digitized historical collections and featured readings.');
       } else if (docId === 'about') {
         safeText('dyn-about-title', data.title);
         safeText('dyn-about-sub', data.subtitle);
