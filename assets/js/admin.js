@@ -71,7 +71,7 @@ function loadData() {
     let html = '';
     
     if (currentTab === 'pages') {
-      ['home', 'about', 'contact'].forEach(id => {
+      ['home', 'about', 'contact', 'gallery'].forEach(id => {
         html += `
           <tr class="hover:bg-gray-50 transition-colors">
             <td class="px-6 py-4 font-bold text-slate-800 capitalize">${id} Page</td>
@@ -301,6 +301,15 @@ function openForm(docData = null, docId = null) {
           <div><label class="block text-sm font-bold text-slate-700 mb-1">Phone</label><input type="text" id="p-contact-phone" class="w-full px-3 py-2 border rounded-lg" value="${docData?.phone || '+1 (555) 012-3456'}"></div>
         </div>
       `;
+    } else if (editId === 'gallery') {
+      dataForm.innerHTML = `
+        <div class="space-y-4">
+          <h4 class="font-bold text-lg border-b pb-2 text-secondary">Gallery Page Content</h4>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Tag (e.g. Our Visual Heritage)</label><input type="text" id="p-gallery-tag" class="w-full px-3 py-2 border rounded-lg" value="${docData?.tag || 'Our Visual Heritage'}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-gallery-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || 'Gallery'}"></div>
+          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-gallery-sub" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.subtitle || 'A visual journey through our heritage and events. Exploring the depths of the Syed Ejaz Digital Library through curated artifacts and community moments.'}</textarea></div>
+        </div>
+      `;
     }
   } else if (currentTab === 'settings') {
     dataForm.innerHTML = `
@@ -486,6 +495,12 @@ document.getElementById('save-btn').addEventListener('click', async () => {
           address: document.getElementById('p-contact-address').value,
           email: document.getElementById('p-contact-email').value,
           phone: document.getElementById('p-contact-phone').value
+        };
+      } else if (editId === 'gallery') {
+        payload = {
+          tag: document.getElementById('p-gallery-tag').value,
+          title: document.getElementById('p-gallery-title').value,
+          subtitle: document.getElementById('p-gallery-sub').value
         };
       }
     }

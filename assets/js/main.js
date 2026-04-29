@@ -16,6 +16,7 @@ const fadeObserver = new IntersectionObserver((entries) => {
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.fade-up').forEach(el => fadeObserver.observe(el));
   loadPageContent();
+  initGallery();
 });
 
 // ---- Load Page Content (Dynamic Text) ----
@@ -26,6 +27,7 @@ async function loadPageContent() {
   if (path.includes('index.html') || path === '/' || path.endsWith('/')) docId = 'home';
   else if (path.includes('about.html')) docId = 'about';
   else if (path.includes('contact.html')) docId = 'contact';
+  else if (path.includes('gallery.html')) docId = 'gallery';
   
   if (!docId) return;
 
@@ -84,10 +86,68 @@ async function loadPageContent() {
         safeText('dyn-contact-phone', data.phone || '+1 (555) 012-3456');
         updateImage('dyn-contact-img-accent', data.imgAccent);
         updateImage('dyn-contact-img-map', data.imgMap);
+      } else if (docId === 'gallery') {
+        safeText('dyn-gallery-tag', data.tag || 'Our Visual Heritage');
+        safeText('dyn-gallery-title', data.title || 'Gallery');
+        safeText('dyn-gallery-sub', data.subtitle || 'A visual journey through our heritage and events. Exploring the depths of the Syed Ejaz Digital Library through curated artifacts and community moments.');
       }
     }
   } catch (err) {
     console.error("Failed to load page content:", err);
+  }
+}
+
+// ---- Load Gallery Items ----
+async function initGallery() {
+  const grid = document.getElementById('gallery-grid');
+  if (!grid || !window.db) return;
+  
+  try {
+    const snap = await window.db.collection('gallery').get();
+    let items = [];
+    snap.forEach(doc => items.push(doc.data()));
+    
+    const renderItems = (filter) => {
+      let html = '';
+      items.forEach(item => {
+        if (filter === 'all' || item.category === filter) {
+          html += `
+            <div class="gallery-card group relative overflow-hidden bg-surface-container-lowest rounded-[1rem] transition-all duration-300 shadow-[0px_20px_40px_rgba(25,28,29,0.05)]">
+            <div class="aspect-[3/4] overflow-hidden rounded-[1rem]">
+            <img alt="${item.title}" class="w-full h-full object-cover transition-transform duration-500 ease-in-out" src="${item.url || 'assets/images/placeholder.jpg'}">
+            </div>
+            <div class="p-5">
+            <span class="text-[0.65rem] font-label font-bold uppercase tracking-wider text-secondary">${item.category}</span>
+            <h3 class="font-headline font-bold text-primary mt-1">${item.title}</h3>
+            </div>
+            </div>
+          `;
+        }
+      });
+      grid.innerHTML = html || '<div class="col-span-full text-center text-slate-500 py-10">No memories found.</div>';
+    };
+    
+    renderItems('all');
+    
+    // Filter Buttons
+    const btns = document.querySelectorAll('.gallery-filter-btn');
+    btns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        // Reset styles
+        btns.forEach(b => {
+          b.classList.remove('bg-primary', 'text-white');
+          b.classList.add('bg-surface-container-high', 'text-on-surface');
+        });
+        // Set active style
+        e.target.classList.remove('bg-surface-container-high', 'text-on-surface');
+        e.target.classList.add('bg-primary', 'text-white');
+        
+        renderItems(e.target.dataset.filter);
+      });
+    });
+    
+  } catch (err) {
+    console.error("Error loading gallery:", err);
   }
 }
 
