@@ -32,151 +32,16 @@
             </p>
 </header>
 <!-- Category Grid Logic -->
-<div class="space-y-32">
-<!-- Category: History -->
-<section id="history">
-<div class="flex items-end justify-between mb-12">
-<div>
-<h2 class="text-3xl font-headline font-bold text-on-surface mb-2">History</h2>
-<div class="h-1 w-20 gradient-button rounded-full"></div>
+<!-- Dynamic Categories from Firebase -->
+<div id="categories-dynamic-container" class="space-y-16">
+  <div class="text-center py-16 text-slate-400">
+    <span class="material-symbols-outlined text-4xl mb-4 block animate-spin">refresh</span>
+    <p>Loading categories from database...</p>
+  </div>
 </div>
-<a class="text-secondary font-semibold flex items-center gap-2 hover:gap-3 transition-all" href="#">
-                        View All <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
-</a>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-<!-- Book Card 1 -->
-<div class="group bg-surface-container-lowest rounded-xl overflow-hidden transition-all duration-500 hover:shadow-[0px_20px_40px_rgba(25,28,29,0.05)]">
-<div class="aspect-[3/4] overflow-hidden">
-<img alt="The Rise of Empires" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Close-up of an old leather-bound book with gold embossing on a dark wooden desk with soft dramatic study lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjUxyKeeeMxNE38W4E0MdRRZdZJs_0Gc64ffpHFUXfieEEc2Kd8WPbhEsqXfMKFjo_pXmk1vUcA-rhVpxED-17ZOeWZMFdp2iUyL3TVwpDgHSEgVw3Qrmz3yk3Chg_IyspnLdfQtKzBru7_GSqTe5x8AQKycvdHaR6Kw8dvWAbl6TLi6iUbyR5NDUOF5H6qB8woi_21JLX8jRCGWY5QldhdGRKJQb4Nlm7z9OI0w5fnDWM01MbCc9jTNRw8nZD1VljvTANhTwsBwA">
-</div>
-<div class="p-8">
-<span class="font-label text-[10px] font-bold uppercase tracking-widest text-secondary mb-2 block">Classical Era</span>
-<h3 class="text-xl font-headline font-bold text-on-surface mb-2">The Rise of Empires</h3>
-<p class="text-primary text-sm font-body mb-6 line-clamp-2">A comprehensive study of the geopolitical structures that shaped the ancient world through trade and conquest.</p>
-<div class="flex gap-3">
-<button class="gradient-button text-white px-6 py-2.5 rounded-full text-sm font-semibold flex-1 flex items-center justify-center gap-2 hover:opacity-90 transition-all">
-<span class="material-symbols-outlined text-sm" data-icon="menu_book">menu_book</span> Read
-                                </button>
-<button class="bg-surface-container-highest text-on-surface px-4 py-2.5 rounded-xl hover:bg-surface-dim transition-all">
-<span class="material-symbols-outlined" data-icon="download">download</span>
-</button>
-</div>
-</div>
-</div>
-<!-- Book Card 2 -->
-<div class="group bg-surface-container-lowest rounded-xl overflow-hidden transition-all duration-500 hover:shadow-[0px_20px_40px_rgba(25,28,29,0.05)]">
-<div class="aspect-[3/4] overflow-hidden">
-<img alt="Renaissance Echoes" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Interior of an ornate gothic library with towering bookshelves and dust motes dancing in shafts of sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwRxNr6bXUpVnBkBMnb5JjhqtqqoCqB_4RGAlxu5pKE3ov8o-ToVWE6n2If60EKA761qF-g_CGC82dxRS5t8fo82D5stDIEIVq-6FUT1-qFPhIgR1m1LWGvlVHC78XvA2In8M0GZG5nJohdeBEuyTMz11FB-VCKbvaY8Kw7-KN5AbaA6KEVO0pKwl5lbfJKfQwP1bwgW778A7Uym9L4CGpMrbzsSV2TsaNI0Ic5g2GYTELBNi7hU2pRJjnSF7Bs3VZgYifIBZUB2k">
-</div>
-<div class="p-8">
-<span class="font-label text-[10px] font-bold uppercase tracking-widest text-secondary mb-2 block">European Studies</span>
-<h3 class="text-xl font-headline font-bold text-on-surface mb-2">Renaissance Echoes</h3>
-<p class="text-primary text-sm font-body mb-6 line-clamp-2">Exploring the cultural and artistic rebirth of Europe during the 14th through 17th centuries.</p>
-<div class="flex gap-3">
-<button class="gradient-button text-white px-6 py-2.5 rounded-full text-sm font-semibold flex-1 flex items-center justify-center gap-2 hover:opacity-90 transition-all">
-<span class="material-symbols-outlined text-sm" data-icon="menu_book">menu_book</span> Read
-                                </button>
-<button class="bg-surface-container-highest text-on-surface px-4 py-2.5 rounded-xl hover:bg-surface-dim transition-all">
-<span class="material-symbols-outlined" data-icon="download">download</span>
-</button>
-</div>
-</div>
-</div>
-<!-- Book Card 3 -->
-<div class="group bg-surface-container-lowest rounded-xl overflow-hidden transition-all duration-500 hover:shadow-[0px_20px_40px_rgba(25,28,29,0.05)]">
-<div class="aspect-[3/4] overflow-hidden">
-<img alt="Lost Civilizations" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Macro photo of ancient textured parchment paper with faded ink writing and soft edge blur" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8hDeIpIhTNawsHYmymSuYs8TOGwsMTx2IRYaNbZrb4E_gpjRe-mN553Rd9kQRskFdJJFvG_nFnXd63eI72TA7Wn6c5Q2PfaiFViL4cDouq-d0wSbz-iH6qCov5TL_3PVaSgzBZS6wIR7SqCc6_JlIsqhdaFS_S_0TIg7Bq7715skKai5GQddbH5OiRByE9QVRFYiyPjtfG9xNmD2MU0CaOt0OgEX9EmADVCLTRkNiivqoYGGqqBmIhFfXaGplHpCVRCe-5wu-t98">
-</div>
-<div class="p-8">
-<span class="font-label text-[10px] font-bold uppercase tracking-widest text-secondary mb-2 block">Archaeology</span>
-<h3 class="text-xl font-headline font-bold text-on-surface mb-2">Lost Civilizations</h3>
-<p class="text-primary text-sm font-body mb-6 line-clamp-2">Unearthing the mysteries of forgotten societies through archaeological discoveries and modern tech.</p>
-<div class="flex gap-3">
-<button class="gradient-button text-white px-6 py-2.5 rounded-full text-sm font-semibold flex-1 flex items-center justify-center gap-2 hover:opacity-90 transition-all">
-<span class="material-symbols-outlined text-sm" data-icon="menu_book">menu_book</span> Read
-                                </button>
-<button class="bg-surface-container-highest text-on-surface px-4 py-2.5 rounded-xl hover:bg-surface-dim transition-all">
-<span class="material-symbols-outlined" data-icon="download">download</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Category: Science -->
-<section id="science">
-<div class="flex items-end justify-between mb-12">
-<div>
-<h2 class="text-3xl font-headline font-bold text-on-surface mb-2">Science</h2>
-<div class="h-1 w-20 gradient-button rounded-full"></div>
-</div>
-<a class="text-secondary font-semibold flex items-center gap-2 hover:gap-3 transition-all" href="#">
-                        View All <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
-</a>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-<!-- Book Card 4 -->
-<div class="group bg-surface-container-lowest rounded-xl overflow-hidden transition-all duration-500 hover:shadow-[0px_20px_40px_rgba(25,28,29,0.05)]">
-<div class="aspect-[3/4] overflow-hidden">
-<img alt="Quantum Realm" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Abstract visualization of quantum physics with glowing blue and teal light filaments and dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgnHm-crcvzNvSnYSce5khSIbUBm6P1o7FDobMarfyNuaT-4_Rs2nz7JxIJHWn6tYXQG5zh0JRu5KZx9uZt4-SnoVil_kcai_-y0kxiVcKZIJP1-vCqVayajwdk95WskFAQzZwun43LVj7QQFeQYYG5CEZVfPp_LKp4zTAZpTROO3RZYZd8a17WMW_QkG2obXjptIgZgHgBmWnPNKbp8r4I_1-l7QHLVdbLtntEB0xTTE1jPtsyPHBjwlaTGf9EznVZnvr0Wq56EM">
-</div>
-<div class="p-8">
-<span class="font-label text-[10px] font-bold uppercase tracking-widest text-secondary mb-2 block">Physics</span>
-<h3 class="text-xl font-headline font-bold text-on-surface mb-2">The Quantum Realm</h3>
-<p class="text-primary text-sm font-body mb-6 line-clamp-2">An accessible guide to the complex laws governing the smallest particles in our universe.</p>
-<div class="flex gap-3">
-<button class="gradient-button text-white px-6 py-2.5 rounded-full text-sm font-semibold flex-1 flex items-center justify-center gap-2 hover:opacity-90 transition-all">
-<span class="material-symbols-outlined text-sm" data-icon="menu_book">menu_book</span> Read
-                                </button>
-<button class="bg-surface-container-highest text-on-surface px-4 py-2.5 rounded-xl hover:bg-surface-dim transition-all">
-<span class="material-symbols-outlined" data-icon="download">download</span>
-</button>
-</div>
-</div>
-</div>
-<!-- Book Card 5 -->
-<div class="group bg-surface-container-lowest rounded-xl overflow-hidden transition-all duration-500 hover:shadow-[0px_20px_40px_rgba(25,28,29,0.05)]">
-<div class="aspect-[3/4] overflow-hidden">
-<img alt="Cosmic Horizon" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Stunning telescope view of a colorful nebula with distant stars and deep space purple and blue hues" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQAc0SaL2iDOQHkxw6ep3OiShgEegZA4mtddUSl4Zn7lVmaVsxEA1k_SSHE0vsps2xMEpl_kKyjq6DfFXUl3ynwbgirzXfgC6-NhPWm0Fmju9et4cqul_31m4f5bRxRzjpH2bqOkX8TvtJ6IdJhdvTyRwYICaYqXYvmWXoY0vWHVbAF7mHuw0WiLHrvpD3y3xvwncEnovyTdRqoYp0H_m8v7hLMF-qdJCMVXnZN4zlBljojb9uPbPy2qSX_skcfJ8lbJ5tKpL1Fug">
-</div>
-<div class="p-8">
-<span class="font-label text-[10px] font-bold uppercase tracking-widest text-secondary mb-2 block">Astronomy</span>
-<h3 class="text-xl font-headline font-bold text-on-surface mb-2">Cosmic Horizon</h3>
-<p class="text-primary text-sm font-body mb-6 line-clamp-2">Charting the expansion of the cosmos and the birth of galaxies across billions of years.</p>
-<div class="flex gap-3">
-<button class="gradient-button text-white px-6 py-2.5 rounded-full text-sm font-semibold flex-1 flex items-center justify-center gap-2 hover:opacity-90 transition-all">
-<span class="material-symbols-outlined text-sm" data-icon="menu_book">menu_book</span> Read
-                                </button>
-<button class="bg-surface-container-highest text-on-surface px-4 py-2.5 rounded-xl hover:bg-surface-dim transition-all">
-<span class="material-symbols-outlined" data-icon="download">download</span>
-</button>
-</div>
-</div>
-</div>
-<!-- Book Card 6 -->
-<div class="group bg-surface-container-lowest rounded-xl overflow-hidden transition-all duration-500 hover:shadow-[0px_20px_40px_rgba(25,28,29,0.05)]">
-<div class="aspect-[3/4] overflow-hidden">
-<img alt="Neural Networks" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="Close up of a human eye reflecting digital light circuits and neural connection patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_OTQM8kd5mXrUQoZ6YSsRIr6lxD4ZwYSPqejDmTfnH5dq_hbZBJZmPOM4eS8AHGJ_H_itqw2CzpaYBQR_g46bG2Y9BuzYOjkguurURdxt-ci_GoVvBxp8WzNQeQJbiTnIFQDy88UD9vofLCKJ_iZJaM0tlfUr7zqIi1-U3Je_XVcvA0whKoeVvb_RhQrGWWqto1LLim9Cze3DB8MjT2ZEpikbPHXjUT0mI57MYWCW4G1Y1OeTthMdMCAZk6YAuYqUjKONSoujJls">
-</div>
-<div class="p-8">
-<span class="font-label text-[10px] font-bold uppercase tracking-widest text-secondary mb-2 block">Biotech</span>
-<h3 class="text-xl font-headline font-bold text-on-surface mb-2">Neural Networks</h3>
-<p class="text-primary text-sm font-body mb-6 line-clamp-2">Understanding the intersection between biological intelligence and synthetic architecture.</p>
-<div class="flex gap-3">
-<button class="gradient-button text-white px-6 py-2.5 rounded-full text-sm font-semibold flex-1 flex items-center justify-center gap-2 hover:opacity-90 transition-all">
-<span class="material-symbols-outlined text-sm" data-icon="menu_book">menu_book</span> Read
-                                </button>
-<button class="bg-surface-container-highest text-on-surface px-4 py-2.5 rounded-xl hover:bg-surface-dim transition-all">
-<span class="material-symbols-outlined" data-icon="download">download</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Category: Our Initiatives & Brands -->
-<section id="initiatives">
+
+<!-- Our Initiatives & Brands (static) -->
+<section id="initiatives" class="mt-20">
 <div class="flex items-end justify-between mb-12">
 <div>
 <h2 class="text-3xl font-headline font-bold text-on-surface mb-2">Our Initiatives &amp; Brands</h2>
@@ -184,7 +49,6 @@
 </div>
 </div>
 <div class="grid grid-cols-1 gap-10">
-<!-- Feature Card - Urdu Canada Official -->
 <div class="group flex flex-col md:flex-row bg-surface-container-lowest rounded-xl overflow-hidden transition-all duration-500 hover:shadow-[0px_20px_40px_rgba(25,28,29,0.05)] border border-outline-variant/30">
 <div class="md:w-5/12 aspect-square flex items-center justify-center p-8 bg-surface-container-low">
 <img alt="Urdu Canada Official Logo" class="w-full h-full max-w-[400px] object-contain transition-transform duration-500 group-hover:scale-105" src="https://scontent.flhe4-2.fna.fbcdn.net/v/t39.30808-6/363904443_116485628196036_882142966687719421_n.jpg?_nc_cat=105&amp;ccb=1-7&amp;_nc_sid=1d70fc&amp;_nc_eui2=AeFW4SHsKyUVZRmNL3Hh3c1AZPvZE2vxU0tk-9kTa_FTSxBsshvM27-gofNghSghxrapcLi_HHnIY7hUm4sJsT2w&amp;_nc_ohc=s8lw27pOpKgQ7kNvwE1Unzm&amp;_nc_oc=AdruLO4JzaySzLJkZfOAgX59LPZIBMAlM4J_8Ur119ZBdGCwLxszpp0dH3REoPHq9sw&amp;_nc_zt=23&amp;_nc_ht=scontent.flhe4-2.fna&amp;_nc_gid=sIwgzIb9z54ajBMC2bvFFg&amp;_nc_ss=7a3a8&amp;oh=00_Af2rJmNeTYzUySBmfzOePJ38AYa6nHJk-c1czm4DNM6M7g&amp;oe=69E53286">
@@ -193,29 +57,26 @@
 <span class="font-label text-[10px] font-bold uppercase tracking-widest text-secondary mb-4 block">Language &amp; Culture</span>
 <h3 class="text-3xl md:text-4xl font-headline font-bold text-on-surface mb-4">Urdu Canada Official</h3>
 <p class="text-primary text-lg font-body mb-8 leading-relaxed max-w-xl">
-                            Urdu Canada Official is a dedicated initiative founded by Syed Ejaz Gillani, committed to the preservation and promotion of Urdu language and literature within the Canadian diaspora. Through digital media and community engagement, it serves as a bridge for cultural heritage.
-                        </p>
+  Urdu Canada Official is a dedicated initiative founded by Syed Ejaz Gillani, committed to the preservation and promotion of Urdu language and literature within the Canadian diaspora.
+</p>
 <div class="flex flex-wrap gap-4">
 <a class="gradient-button text-white px-8 py-3 rounded-full text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-all" href="#">
-<span class="material-symbols-outlined text-lg" data-icon="smart_display">smart_display</span> YouTube
-                            </a>
+<span class="material-symbols-outlined text-lg">smart_display</span> YouTube
+</a>
 <a class="bg-surface-container-highest text-on-surface px-8 py-3 rounded-full text-sm font-semibold flex items-center justify-center gap-2 hover:bg-surface-dim transition-all" href="#">
-<span class="material-symbols-outlined text-lg" data-icon="facebook">facebook</span> Facebook
-                            </a>
-<a class="bg-surface-container-highest text-on-surface px-8 py-3 rounded-full text-sm font-semibold flex items-center justify-center gap-2 hover:bg-surface-dim transition-all" href="#">
-<span class="material-symbols-outlined text-lg" data-icon="play_circle">play_circle</span> TikTok
-                            </a>
+<span class="material-symbols-outlined text-lg">facebook</span> Facebook
+</a>
 </div>
 </div>
 </div>
 </div>
 </section>
 </div>
-<!-- Pagination/Load More -->
+<!-- Pagination -->
 <div class="mt-32 text-center">
-<button class="px-10 py-4 border border-outline-variant rounded-full text-primary font-semibold hover:bg-surface-container-high transition-all duration-300">
-                Load More Categories
-            </button>
+<a href="books.html" class="px-10 py-4 border border-outline-variant rounded-full text-primary font-semibold hover:bg-surface-container-high transition-all duration-300 inline-block">
+  Browse All Books
+</a>
 </div>
 </main>
   <div id="footer-container"></div>

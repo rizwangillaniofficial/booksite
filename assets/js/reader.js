@@ -4,12 +4,13 @@
    ============================================ */
 document.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
-  const bookId = parseInt(params.get('id'));
+  const bookId = params.get('id');
 
   if (!bookId) return; // Show default "Select a book" message
 
   const data = await loadBooks();
-  const book = data.books.find(b => b.id === bookId);
+  // Compare as strings since Firestore stores IDs as strings
+  const book = data.books.find(b => String(b.id) === String(bookId));
 
   if (!book) {
     document.getElementById('reader-loading').innerHTML = `

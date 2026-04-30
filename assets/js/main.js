@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.fade-up').forEach(el => fadeObserver.observe(el));
   loadPageContent();
   initGallery();
+  loadHomepageBooks();
+  loadHomepageCategories();
+  loadCategoriesPage();
 });
 
 // ---- Load Page Content (Dynamic Text) ----
@@ -235,11 +238,125 @@ function renderBookCard(book) {
 
 // ---- Render Category Card ----
 function renderCategoryCard(cat) {
+  const count = cat.count || 0;
   return `
     <a href="books.html?category=${cat.id}" class="cat-card bg-white dark:bg-slate-800 p-8 rounded-xl text-center block cursor-pointer border border-gray-100 dark:border-slate-700">
       <span class="material-symbols-outlined text-4xl text-[#006a6a] mb-3 block">${cat.icon}</span>
       <span class="font-headline font-bold text-on-surface dark:text-white text-sm block">${cat.name}</span>
       ${cat.name_ur ? `<span class="urdu-text text-xs text-slate-400 block mt-1">${cat.name_ur}</span>` : ''}
-      <span class="text-xs text-slate-400 mt-1 block">${cat.count} book${cat.count !== 1 ? 's' : ''}</span>
+      <span class="text-xs text-slate-400 mt-1 block">${count} book${count !== 1 ? 's' : ''}</span>
     </a>`;
 }
+
+// ---- Load Featured Books on Homepage ----
+async function loadHomepageBooks() {
+  const grid = document.getElementById('featured-books-grid');
+  if (!grid || !window.db) return;
+
+  try {
+    const snap = await window.db.collection('books').get();
+    if (snap.empty) return; // keep hardcoded fallback if no books
+
+    let html = '';
+    let count = 0;
+    snap.forEach(doc => {
+      if (count >= 4) return; // show max 4 featured
+      const book = doc.data();
+      html += renderBookCard(book);
+      count++;
+    });
+    if (html) grid.innerHTML = html;
+  } catch (e) {
+    console.error("Error loading featured books:", e);
+  }
+}
+
+// ---- Load Categories on Homepage ----
+async function loadHomepageCategories() {
+  const grid = document.getElementById('home-categories-grid');
+  if (!grid || !window.db) return;
+
+  try {
+    const catsSnap = await window.db.collection('categories').get();
+    if (catsSnap.empty) return; // keep hardcoded fallback
+
+    // Count books per category
+    const booksSnap = await window.db.collection('books').get();
+    const bookCounts = {};
+    booksSnap.forEach(doc => {
+      const cat = doc.data().category;
+      bookCounts[cat] = (bookCounts[cat] || 0) + 1;
+    });
+
+    let html = '';
+    catsSnap.forEach(doc => {
+      const cat = doc.data();
+      html += `
+        <a href="books.html?category=${cat.id}" class="bg-surface-container-lowest p-8 rounded-xl text-center group hover:-translate-y-2 transition-all duration-300 cursor-pointer block">
+          <span class="material-symbols-outlined text-4xl text-secondary mb-4 group-hover:scale-110 transition-transform block">${cat.icon}</span>
+          <span class="font-headline font-bold text-on-surface text-sm block">${cat.name}</span>
+          ${cat.name_ur ? `<span class="urdu-text text-xs text-slate-400 block mt-1">${cat.name_ur}</span>` : ''}
+          <span class="text-xs text-slate-400 mt-1 block">${bookCounts[cat.id] || 0} books</span>
+        </a>`;
+    });
+    if (html) grid.innerHTML = html;
+  } catch (e) {
+    console.error("Error loading homepage categories:", e);
+  }
+}
+
+// ---- Load Categories Page ----
+async function loadCategoriesPage() {
+  const container = document.getElementById('categories-dynamic-container');
+  if (!container || !window.db) return;
+
+  try {
+    const [catsSnap, booksSnap] = await Promise.all([
+      window.db.collection('categories').get(),
+      window.db.collection('books').get()
+    ]);
+
+    // Group books by category
+    const booksByCategory = {};
+    booksSnap.forEach(doc => {
+      const book = doc.data();
+      if (!booksByCategory[book.category]) booksByCategory[book.category] = [];
+      booksByCategory[book.category].push(book);
+    });
+
+    let html = '';
+    catsSnap.forEach(doc => {
+      const cat = doc.data();
+      const books = booksByCategory[cat.id] || [];
+      
+      html += `
+        <section id="${cat.id}" class="mb-20">
+          <div class="flex items-end justify-between mb-12">
+            <div>
+              <h2 class="text-3xl font-headline font-bold text-on-surface mb-2">
+                <span class="material-symbols-outlined text-secondary align-middle mr-2">${cat.icon}</span>${cat.name}
+                ${cat.name_ur ? `<span class="urdu-text text-lg text-slate-400 ml-2">${cat.name_ur}</span>` : ''}
+              </h2>
+              <div class="h-1 w-20 gradient-button rounded-full"></div>
+            </div>
+            <a class="text-secondary font-semibold flex items-center gap-2 hover:gap-3 transition-all" href="books.html?category=${cat.id}">
+              View All (${books.length}) <span class="material-symbols-outlined">arrow_forward</span>
+            </a>
+          </div>`;
+
+      if (books.length === 0) {
+        html += `<p class="text-slate-400 text-center py-8">No books in this category yet.</p>`;
+      } else {
+        html += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">`;
+        books.slice(0, 3).forEach(book => { html += renderBookCard(book); });
+        html += `</div>`;
+      }
+      html += `</section>`;
+    });
+
+    if (html) container.innerHTML = html;
+  } catch (e) {
+    console.error("Error loading categories page:", e);
+  }
+}
+

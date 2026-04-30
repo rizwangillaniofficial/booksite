@@ -24,6 +24,10 @@ loginBtn.addEventListener('click', () => {
     loginModal.classList.add('hidden');
     adminDashboard.classList.remove('hidden');
     loadData();
+    // Check storage availability
+    if (!window.storage) {
+      showToast("⚠️ Firebase Storage not available. Use direct URLs for images/PDFs.", "error");
+    }
   } else {
     loginErr.classList.remove('hidden');
   }
@@ -346,13 +350,59 @@ function openForm(docData = null, docId = null) {
   }
 }
 
-// Save Data
+// Save Data — Upload with progress & error handling
 async function uploadFile(file, folder) {
-  if (!window.storage) throw new Error("Firebase Storage not initialized");
+  if (!window.storage) {
+    throw new Error("Firebase Storage is not available. Please paste a direct URL instead of uploading a file.");
+  }
+  
+  // Validate file size (max 50MB for PDFs, 10MB for images)
+  const maxSize = folder === 'pdfs' ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+  if (file.size > maxSize) {
+    throw new Error(`File too large! Max size: ${folder === 'pdfs' ? '50MB' : '10MB'}. Your file: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+  }
+
   const storageRef = window.storage.ref();
-  const fileRef = storageRef.child(`${folder}/${Date.now()}_${file.name}`);
-  await fileRef.put(file);
-  return await fileRef.getDownloadURL();
+  const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+  const fileRef = storageRef.child(`${folder}/${fileName}`);
+  
+  const btn = document.getElementById('save-btn');
+
+  return new Promise((resolve, reject) => {
+    const uploadTask = fileRef.put(file);
+    
+    // Track upload progress
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Uploading ${pct}%`;
+      },
+      (error) => {
+        console.error("Upload error:", error);
+        if (error.code === 'storage/unauthorized') {
+          reject(new Error("Upload blocked! Go to Firebase Console → Storage → Rules and set: allow read, write;"));
+        } else if (error.code === 'storage/canceled') {
+          reject(new Error("Upload was cancelled."));
+        } else {
+          reject(new Error(`Upload failed: ${error.message}`));
+        }
+      },
+      async () => {
+        try {
+          const url = await uploadTask.snapshot.ref.getDownloadURL();
+          resolve(url);
+        } catch (e) {
+          reject(new Error("Upload completed but failed to get URL: " + e.message));
+        }
+      }
+    );
+
+    // Timeout after 5 minutes
+    setTimeout(() => {
+      uploadTask.cancel();
+      reject(new Error("Upload timed out after 5 minutes. Try a smaller file or paste a URL instead."));
+    }, 5 * 60 * 1000);
+  });
 }
 
 document.getElementById('save-btn').addEventListener('click', async () => {

@@ -15,7 +15,20 @@ if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
   }
   window.db = firebase.firestore();
-  if (firebase.storage) {
-    window.storage = firebase.storage();
+  
+  // Initialize Storage with proper error handling
+  try {
+    if (typeof firebase.storage === 'function') {
+      window.storage = firebase.storage();
+      console.log("✅ Firebase Storage initialized successfully");
+    } else {
+      console.warn("⚠️ Firebase Storage SDK not loaded. File uploads will use URL input only.");
+      window.storage = null;
+    }
+  } catch (e) {
+    console.error("❌ Firebase Storage init error:", e);
+    window.storage = null;
   }
+} else {
+  console.error("❌ Firebase SDK not loaded!");
 }
