@@ -1,640 +1,293 @@
-/* ============================================
-   Syed Ejaz Gillani Digital Library
-   admin.js — Admin Dashboard Logic (Firebase)
-   ============================================ */
+/* Admin CRUD - Load, Save, Delete, Forms */
 
-const ADMIN_PWD = "admin"; // Simple password for demo. Real app should use Firebase Auth
-let currentTab = 'books';
-let editId = null;
+// Load tab content
+async function loadTabContent(){
+  const area=document.getElementById('tab-content');
+  if(!window.db)return area.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">error</span><p>Firebase not connected!</p></div>';
 
-// DOM Elements
-const loginModal = document.getElementById('login-modal');
-const adminDashboard = document.getElementById('admin-dashboard');
-const pwdInput = document.getElementById('admin-pwd');
-const loginBtn = document.getElementById('login-btn');
-const loginErr = document.getElementById('login-err');
-const tableBody = document.getElementById('data-table-body');
-const formModal = document.getElementById('form-modal');
-const dataForm = document.getElementById('data-form');
-const tabTitle = document.getElementById('tab-title');
-
-// Login Logic
-loginBtn.addEventListener('click', () => {
-  if (pwdInput.value === ADMIN_PWD) {
-    loginModal.classList.add('hidden');
-    adminDashboard.classList.remove('hidden');
-    loadData();
-    // Check storage availability
-    if (!window.storage) {
-      showToast("⚠️ Firebase Storage not available. Use direct URLs for images/PDFs.", "error");
-    }
-  } else {
-    loginErr.classList.remove('hidden');
+  if(currentTab==='dashboard'){
+    let bc=0,cc=0,gc=0;
+    try{
+      const bs=await db.collection('books').get();bc=bs.size;
+      const cs=await db.collection('categories').get();cc=cs.size;
+      const gs=await db.collection('gallery').get();gc=gs.size;
+    }catch(e){}
+    area.innerHTML=`<div class="stat-grid">
+      <div class="stat-card"><div class="stat-icon" style="background:#f0fdfa"><span class="material-symbols-outlined" style="color:#006a6a">menu_book</span></div><h4>${bc}</h4><p>Total Books</p></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#eff6ff"><span class="material-symbols-outlined" style="color:#2563eb">category</span></div><h4>${cc}</h4><p>Categories</p></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#fdf4ff"><span class="material-symbols-outlined" style="color:#9333ea">collections</span></div><h4>${gc}</h4><p>Gallery Images</p></div>
+      <div class="stat-card"><div class="stat-icon" style="background:#fff7ed"><span class="material-symbols-outlined" style="color:#ea580c">article</span></div><h4>4</h4><p>Pages</p></div>
+    </div>
+    <div class="data-card"><div class="data-card-header"><h3>Quick Tip</h3></div><div style="padding:24px;color:#64748b;font-size:14px;line-height:1.8">
+      <p>📚 <b>Images</b> are auto-compressed & saved directly — no separate upload needed!</p>
+      <p>📄 <b>PDFs</b>: Upload to <a href="https://drive.google.com" target="_blank" style="color:#006a6a">Google Drive</a>, set sharing to "Anyone with link", then paste the link.</p>
+      <p>🔗 <b>Google Drive PDF link format</b>: Change <code>/view</code> to <code>/preview</code> in the URL for embedded reading.</p>
+    </div></div>`;
+    return;
   }
-});
-pwdInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') loginBtn.click() });
 
-// Tab Switching
-window.switchTab = (tab) => {
-  currentTab = tab;
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    if(btn.dataset.tab === tab) {
-      btn.classList.replace('text-slate-600', 'text-[#006a6a]');
-      btn.classList.replace('bg-transparent', 'bg-gray-100');
-      btn.classList.add('bg-gray-100');
-    } else {
-      btn.classList.replace('text-[#006a6a]', 'text-slate-600');
-      btn.classList.remove('bg-gray-100');
-    }
-  });
-  tabTitle.textContent = `Manage ${tab.charAt(0).toUpperCase() + tab.slice(1)}`;
-  
-  const tabSubtitle = tabTitle.nextElementSibling;
-  if (tab === 'pages' || tab === 'settings') {
-    document.getElementById('add-new-btn').classList.add('hidden');
-    tabSubtitle.textContent = 'Edit existing content and configuration for your site.';
-  } else {
-    document.getElementById('add-new-btn').classList.remove('hidden');
-    tabSubtitle.textContent = 'Add, edit, or delete items from your database.';
+  if(currentTab==='pages'){
+    area.innerHTML=`<div class="data-card"><table><thead><tr><th>Page</th><th>Description</th><th>Action</th></tr></thead><tbody>
+      ${['home','about','contact','gallery'].map(p=>`<tr><td style="font-weight:700;text-transform:capitalize">${p} Page</td><td style="color:#64748b">Edit all text & images for ${p} page</td><td><button class="btn btn-sm btn-primary" onclick="editPage('${p}')"><span class="material-symbols-outlined" style="font-size:14px">edit</span> Edit</button></td></tr>`).join('')}
+    </tbody></table></div>`;
+    return;
   }
-  loadData();
-};
 
-// Data Loading (Real-time from Firestore)
-function loadData() {
-  if(!window.db) return tableBody.innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-red-500">Firebase not initialized!</td></tr>`;
-  
-  tableBody.innerHTML = `<tr><td colspan="3" class="px-6 py-12 text-center text-slate-400"><span class="material-symbols-outlined animate-spin">refresh</span></td></tr>`;
-  
-  window.db.collection(currentTab).onSnapshot(snapshot => {
-    if (snapshot.empty && currentTab !== 'pages' && currentTab !== 'settings') {
-      tableBody.innerHTML = `<tr><td colspan="3" class="px-6 py-12 text-center text-slate-400">No data found. Add your first item!</td></tr>`;
-      return;
-    }
-    
-    let html = '';
-    
-    if (currentTab === 'pages') {
-      ['home', 'about', 'contact', 'gallery'].forEach(id => {
-        html += `
-          <tr class="hover:bg-gray-50 transition-colors">
-            <td class="px-6 py-4 font-bold text-slate-800 capitalize">${id} Page</td>
-            <td class="px-6 py-4 text-sm text-slate-500">Edit text content for the ${id} page.</td>
-            <td class="px-6 py-4 text-right">
-              <button onclick="editItem('${id}')" class="px-4 py-2 bg-gray-100 text-[#006a6a] font-medium rounded-lg hover:bg-gray-200 transition-colors text-sm">Edit Content</button>
-            </td>
-          </tr>
-        `;
-      });
-    } else if (currentTab === 'settings') {
-      html += `
-        <tr class="hover:bg-gray-50 transition-colors">
-          <td class="px-6 py-4 font-bold text-slate-800 capitalize">General Settings</td>
-          <td class="px-6 py-4 text-sm text-slate-500">Site title, footer, social links.</td>
-          <td class="px-6 py-4 text-right">
-            <button onclick="editItem('general')" class="px-4 py-2 bg-gray-100 text-[#006a6a] font-medium rounded-lg hover:bg-gray-200 transition-colors text-sm">Edit Settings</button>
-          </td>
-        </tr>
-      `;
-    } else {
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const id = doc.id;
-        
-        if (currentTab === 'books') {
-          html += `
-            <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-4">
-                  <img src="${data.cover || 'assets/images/placeholder.jpg'}" class="w-12 h-16 object-cover rounded bg-gray-100 shadow-sm">
-                  <div>
-                    <div class="font-bold text-slate-800">${data.title}</div>
-                    <div class="text-xs text-slate-500">${data.author}</div>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <span class="inline-block px-2.5 py-1 bg-gray-100 text-xs font-semibold rounded-full text-slate-600 mb-1">${data.category}</span>
-                <div class="text-xs text-slate-400">${data.year} • ${data.language || 'Urdu'}</div>
-              </td>
-              <td class="px-6 py-4 text-right">
-                <button onclick="editItem('${id}')" class="p-2 text-slate-400 hover:text-[#006a6a] transition-colors" title="Edit"><span class="material-symbols-outlined text-[20px]">edit</span></button>
-                <button onclick="deleteItem('${id}')" class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Delete"><span class="material-symbols-outlined text-[20px]">delete</span></button>
-              </td>
-            </tr>
-          `;
-        } else if (currentTab === 'categories') {
-          html += `
-            <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                  <span class="material-symbols-outlined text-2xl text-[#006a6a]">${data.icon}</span>
-                  <span class="font-bold text-slate-800">${data.name}</span>
-                </div>
-              </td>
-              <td class="px-6 py-4 text-sm text-slate-500">${data.id} (ID)</td>
-              <td class="px-6 py-4 text-right">
-                <button onclick="editItem('${id}')" class="p-2 text-slate-400 hover:text-[#006a6a] transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
-                <button onclick="deleteItem('${id}')" class="p-2 text-slate-400 hover:text-red-500 transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button>
-              </td>
-            </tr>
-          `;
-        } else if (currentTab === 'gallery') {
-          html += `
-            <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-6 py-4">
-                <div class="flex items-center gap-4">
-                  <img src="${data.url}" class="w-20 h-16 object-cover rounded bg-gray-100 shadow-sm">
-                  <div class="font-bold text-slate-800">${data.title}</div>
-                </div>
-              </td>
-              <td class="px-6 py-4">
-                <span class="inline-block px-2.5 py-1 bg-gray-100 text-xs font-semibold rounded-full text-slate-600">${data.category}</span>
-              </td>
-              <td class="px-6 py-4 text-right">
-                <button onclick="editItem('${id}')" class="p-2 text-slate-400 hover:text-[#006a6a] transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
-                <button onclick="deleteItem('${id}')" class="p-2 text-slate-400 hover:text-red-500 transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button>
-              </td>
-            </tr>
-          `;
-        }
-      });
-    }
-    tableBody.innerHTML = html;
-  }, err => {
-    tableBody.innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-red-500">Error loading data: ${err.message}</td></tr>`;
-  });
-}
-
-// Modal Form Logic
-document.getElementById('add-new-btn').addEventListener('click', () => openForm());
-document.getElementById('close-modal').addEventListener('click', () => {
-  if (typeof tinymce !== 'undefined') tinymce.remove();
-  formModal.classList.add('hidden');
-});
-document.getElementById('cancel-btn').addEventListener('click', () => {
-  if (typeof tinymce !== 'undefined') tinymce.remove();
-  formModal.classList.add('hidden');
-});
-
-function openForm(docData = null, docId = null) {
-  editId = docId;
-  document.getElementById('form-title').textContent = editId ? `Edit ${currentTab.slice(0,-1)}` : `Add New ${currentTab.slice(0,-1)}`;
-  
-  if (currentTab === 'books') {
-    dataForm.innerHTML = `
-      <div class="grid grid-cols-2 gap-4">
-        <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Book Title (English)</label><input type="text" id="b-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || ''}" required></div>
-        <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Book Title (Urdu)</label><input type="text" id="b-title-ur" class="w-full px-3 py-2 border rounded-lg urdu-text" value="${docData?.title_ur || ''}" dir="rtl"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Author</label><input type="text" id="b-author" class="w-full px-3 py-2 border rounded-lg" value="${docData?.author || 'Syed Ejaz Gillani'}" required></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Year</label><input type="text" id="b-year" class="w-full px-3 py-2 border rounded-lg" value="${docData?.year || ''}"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Category ID</label><input type="text" id="b-cat" class="w-full px-3 py-2 border rounded-lg" value="${docData?.category || ''}" placeholder="e.g. literature" required></div>
-        <div>
-          <label class="block text-sm font-bold text-slate-700 mb-1">Cover Image URL or Upload</label>
-          <input type="text" id="b-cover" class="w-full px-3 py-2 border rounded-lg mb-2" value="${docData?.cover || ''}" placeholder="https://...">
-          <input type="file" id="b-cover-file" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#006a6a]/10 file:text-[#006a6a] hover:file:bg-[#006a6a]/20" accept="image/*">
-        </div>
-        <div class="col-span-2">
-          <label class="block text-sm font-bold text-slate-700 mb-1">PDF URL or Upload File</label>
-          <input type="text" id="b-pdf" class="w-full px-3 py-2 border rounded-lg mb-2" value="${docData?.pdf_url || ''}" placeholder="Leave blank if not available">
-          <input type="file" id="b-pdf-file" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#006a6a]/10 file:text-[#006a6a] hover:file:bg-[#006a6a]/20" accept="application/pdf">
-        </div>
-        <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Description</label><textarea id="b-desc" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.description || ''}</textarea></div>
-      </div>
-    `;
-  } else if (currentTab === 'categories') {
-    dataForm.innerHTML = `
-      <div class="space-y-4">
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Category ID (no spaces)</label><input type="text" id="c-id" class="w-full px-3 py-2 border rounded-lg" value="${docData?.id || ''}" ${editId?'disabled':''} required></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Name (English)</label><input type="text" id="c-name" class="w-full px-3 py-2 border rounded-lg" value="${docData?.name || ''}" required></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Name (Urdu)</label><input type="text" id="c-name-ur" class="w-full px-3 py-2 border rounded-lg urdu-text" value="${docData?.name_ur || ''}" dir="rtl"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Material Icon Name</label><input type="text" id="c-icon" class="w-full px-3 py-2 border rounded-lg" value="${docData?.icon || 'category'}" required></div>
-      </div>
-    `;
-  } else if (currentTab === 'gallery') {
-    dataForm.innerHTML = `
-      <div class="space-y-4">
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="g-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || ''}" required></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Category (Events/Family/Travel)</label><input type="text" id="g-cat" class="w-full px-3 py-2 border rounded-lg" value="${docData?.category || 'Events'}" required></div>
-        <div>
-          <label class="block text-sm font-bold text-slate-700 mb-1">Image URL or Upload</label>
-          <input type="text" id="g-url" class="w-full px-3 py-2 border rounded-lg mb-2" value="${docData?.url || ''}">
-          <input type="file" id="g-file" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#006a6a]/10 file:text-[#006a6a] hover:file:bg-[#006a6a]/20" accept="image/*">
-        </div>
-      </div>
-    `;
-  } else if (currentTab === 'pages') {
-    if (editId === 'home') {
-      dataForm.innerHTML = `
-        <div class="space-y-4">
-          <h4 class="font-bold text-lg border-b pb-2 text-secondary">Images</h4>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Image</label><input type="file" id="p-img-hero" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-secondary/10 file:text-secondary"><p class="text-xs text-slate-500 mt-1">Current: ${docData?.imgHero ? '<a href="'+docData.imgHero+'" target="_blank" class="text-secondary underline">View Image</a>' : 'Default'}</p></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Archive Image</label><input type="file" id="p-img-archive" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-secondary/10 file:text-secondary"><p class="text-xs text-slate-500 mt-1">Current: ${docData?.imgArchive ? '<a href="'+docData.imgArchive+'" target="_blank" class="text-secondary underline">View Image</a>' : 'Default'}</p></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Library Image</label><input type="file" id="p-img-library" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-secondary/10 file:text-secondary"><p class="text-xs text-slate-500 mt-1">Current: ${docData?.imgLibrary ? '<a href="'+docData.imgLibrary+'" target="_blank" class="text-secondary underline">View Image</a>' : 'Default'}</p></div>
-
-          <h4 class="font-bold text-lg border-b pb-2 text-secondary mt-6">Hero Section</h4>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Title</label><input type="text" id="p-hero-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.heroTitle || 'Syed Ejaz Gillani'}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Hero Subtitle</label><textarea id="p-hero-sub" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.heroSubtitle || 'A Pakistani Canadian writer...'}</textarea></div>
-          
-          <h4 class="font-bold text-lg border-b pb-2 mt-6 text-secondary">Floating Card</h4>
-          <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Tag (e.g. New Arrival)</label><input type="text" id="p-new-tag" class="w-full px-3 py-2 border rounded-lg" value="${docData?.newArrivalTag || 'New Arrival'}"></div>
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Author / Sub</label><input type="text" id="p-new-author" class="w-full px-3 py-2 border rounded-lg" value="${docData?.newArrivalAuthor || 'by Syed Ejaz Gillani'}"></div>
-            <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-new-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.newArrivalTitle || 'Uncover the Latest in Knowledge'}"></div>
-          </div>
-
-          <h4 class="font-bold text-lg border-b pb-2 mt-6 text-secondary">About Section</h4>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-about-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.aboutTitle || 'Read More, Learn More, Grow More'}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Text Content</label><textarea id="p-about-text" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.aboutText || 'Syed Ejaz Digital Library is more than just a collection of books...'}</textarea></div>
-          <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Stat 1 Number</label><input type="text" id="p-stat1-num" class="w-full px-3 py-2 border rounded-lg" value="${docData?.stat1Num || '7+'}"></div>
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Stat 1 Label</label><input type="text" id="p-stat1-text" class="w-full px-3 py-2 border rounded-lg" value="${docData?.stat1Text || 'Digital Books'}"></div>
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Stat 2 Number</label><input type="text" id="p-stat2-num" class="w-full px-3 py-2 border rounded-lg" value="${docData?.stat2Num || '120+'}"></div>
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Stat 2 Label</label><input type="text" id="p-stat2-text" class="w-full px-3 py-2 border rounded-lg" value="${docData?.stat2Text || 'Global Archives'}"></div>
-          </div>
-
-          <h4 class="font-bold text-lg border-b pb-2 mt-6 text-secondary">Other Headings</h4>
-          <div class="grid grid-cols-2 gap-4">
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Featured Books Subtitle</label><input type="text" id="p-feat-sub" class="w-full px-3 py-2 border rounded-lg" value="${docData?.featuredSub || 'Our Curated Selection'}"></div>
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Featured Books Title</label><input type="text" id="p-feat-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.featuredTitle || 'Featured Books'}"></div>
-            
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Categories Title</label><input type="text" id="p-cat-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.categoriesTitle || 'Browse by Category'}"></div>
-            <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Categories Subtitle</label><input type="text" id="p-cat-sub" class="w-full px-3 py-2 border rounded-lg" value="${docData?.categoriesSub || 'Explore our diverse collection across various genres and specialized academic disciplines.'}"></div>
-            
-            <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Newsletter Title</label><input type="text" id="p-news-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.newsletterTitle || 'Stay Updated with New Archives'}"></div>
-            <div class="col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">Newsletter Subtitle</label><input type="text" id="p-news-sub" class="w-full px-3 py-2 border rounded-lg" value="${docData?.newsletterSub || 'Join our monthly newsletter to receive updates on newly digitized historical collections and featured readings.'}"></div>
-          </div>
-        </div>
-      `;
-    } else if (editId === 'about') {
-      dataForm.innerHTML = `
-        <div class="space-y-4">
-          <h4 class="font-bold text-lg border-b pb-2 text-secondary">Hero Bio</h4>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Profile Image</label><input type="file" id="p-img-profile" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-secondary/10 file:text-secondary"><p class="text-xs text-slate-500 mt-1">Current: ${docData?.imgProfile ? '<a href="'+docData.imgProfile+'" target="_blank" class="text-secondary underline">View Image</a>' : 'Default'}</p></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Tag</label><input type="text" id="p-about-tag" class="w-full px-3 py-2 border rounded-lg" value="${docData?.heroTag || 'Founder'}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Name</label><input type="text" id="p-about-hero-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.heroTitle || 'Syed Ejaz Gillani'}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Bio (Rich Text)</label><textarea id="p-about-bio" class="w-full px-3 py-2 border rounded-lg h-64 rich-text">${docData?.heroBio || ''}</textarea></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Quote</label><textarea id="p-about-quote" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.quote || '"Knowledge is a universal heritage, and digital preservation is our duty to the future."'}</textarea></div>
-          
-          <h4 class="font-bold text-lg border-b pb-2 mt-6 text-secondary">Our Story</h4>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-about-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || 'Our Story'}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-about-sub" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.subtitle || ''}</textarea></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Story Content</label><textarea id="p-about-content" class="w-full px-3 py-2 border rounded-lg h-40 rich-text">${docData?.content || 'Founded on the principle that knowledge is a universal heritage...'}</textarea></div>
-
-          <h4 class="font-bold text-lg border-b pb-2 mt-6 text-secondary">Mission & Vision</h4>
-          <div class="grid grid-cols-1 gap-4">
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Mission Title</label><input type="text" id="p-miss-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.missionTitle || 'Mission'}"></div>
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Mission Text</label><textarea id="p-miss-text" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.missionText || 'To democratize access to the world\'s scholarly and cultural knowledge...'}</textarea></div>
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Vision Title</label><input type="text" id="p-vis-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.visionTitle || 'Vision'}"></div>
-            <div><label class="block text-sm font-bold text-slate-700 mb-1">Vision Text</label><textarea id="p-vis-text" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.visionText || 'To become the preeminent global archive for digital wisdom...'}</textarea></div>
-          </div>
-        </div>
-      `;
-    } else if (editId === 'contact') {
-      dataForm.innerHTML = `
-        <div class="space-y-4">
-          <h4 class="font-bold text-lg border-b pb-2 text-secondary">Images</h4>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Accent Image (Gallery Link)</label><input type="file" id="p-img-accent" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-secondary/10 file:text-secondary"><p class="text-xs text-slate-500 mt-1">Current: ${docData?.imgAccent ? '<a href="'+docData.imgAccent+'" target="_blank" class="text-secondary underline">View Image</a>' : 'Default'}</p></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Map Image</label><input type="file" id="p-img-map" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-secondary/10 file:text-secondary"><p class="text-xs text-slate-500 mt-1">Current: ${docData?.imgMap ? '<a href="'+docData.imgMap+'" target="_blank" class="text-secondary underline">View Image</a>' : 'Default'}</p></div>
-
-          <h4 class="font-bold text-lg border-b pb-2 text-secondary mt-6">Contact Info</h4>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-contact-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || 'Let\'s Connect with the Archive.'}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-contact-sub" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.subtitle || 'Have a question about our collections or need assistance with digital access?'}</textarea></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Address</label><textarea id="p-contact-address" class="w-full px-3 py-2 border rounded-lg rich-text">${docData?.address || '123 Library Lane, Academic District\\nDigital City, DC 45678'}</textarea></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Email</label><input type="email" id="p-contact-email" class="w-full px-3 py-2 border rounded-lg" value="${docData?.email || 'support@syedejazlibrary.com'}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Phone</label><input type="text" id="p-contact-phone" class="w-full px-3 py-2 border rounded-lg" value="${docData?.phone || '+1 (555) 012-3456'}"></div>
-        </div>
-      `;
-    } else if (editId === 'gallery') {
-      dataForm.innerHTML = `
-        <div class="space-y-4">
-          <h4 class="font-bold text-lg border-b pb-2 text-secondary">Gallery Page Content</h4>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Tag (e.g. Our Visual Heritage)</label><input type="text" id="p-gallery-tag" class="w-full px-3 py-2 border rounded-lg" value="${docData?.tag || 'Our Visual Heritage'}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Title</label><input type="text" id="p-gallery-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.title || 'Gallery'}"></div>
-          <div><label class="block text-sm font-bold text-slate-700 mb-1">Subtitle</label><textarea id="p-gallery-sub" class="w-full px-3 py-2 border rounded-lg h-24">${docData?.subtitle || 'A visual journey through our heritage and events. Exploring the depths of the Syed Ejaz Digital Library through curated artifacts and community moments.'}</textarea></div>
-        </div>
-      `;
-    }
-  } else if (currentTab === 'settings') {
-    dataForm.innerHTML = `
-      <div class="space-y-4">
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Site Title</label><input type="text" id="s-title" class="w-full px-3 py-2 border rounded-lg" value="${docData?.siteTitle || ''}"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Footer Description</label><textarea id="s-footer" class="w-full px-3 py-2 border rounded-lg h-24 rich-text">${docData?.footerDesc || ''}</textarea></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Facebook URL</label><input type="url" id="s-fb" class="w-full px-3 py-2 border rounded-lg" value="${docData?.facebookUrl || ''}"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">YouTube URL</label><input type="url" id="s-yt" class="w-full px-3 py-2 border rounded-lg" value="${docData?.youtubeUrl || ''}"></div>
-        <div><label class="block text-sm font-bold text-slate-700 mb-1">Contact Email</label><input type="email" id="s-email" class="w-full px-3 py-2 border rounded-lg" value="${docData?.emailUrl || ''}"></div>
-      </div>
-    `;
+  if(currentTab==='settings'){
+    editId='general';
+    let d={};try{const doc=await db.collection('settings').doc('general').get();if(doc.exists)d=doc.data()}catch(e){}
+    area.innerHTML=`<div class="data-card" style="padding:28px"><form id="settings-form">
+      <div class="form-group"><label>Site Title</label><input id="s-title" value="${d.siteTitle||'Syed Ejaz Digital Library'}"></div>
+      <div class="form-group"><label>Footer Description</label><textarea id="s-footer" class="rich-text">${d.footerDesc||''}</textarea></div>
+      <div class="form-group"><label>Facebook URL</label><input id="s-fb" value="${d.facebookUrl||''}"></div>
+      <div class="form-group"><label>YouTube URL</label><input id="s-yt" value="${d.youtubeUrl||''}"></div>
+      <div class="form-group"><label>Contact Email</label><input id="s-email" value="${d.emailUrl||''}"></div>
+      <button type="button" class="btn btn-primary" onclick="saveSettings()"><span class="material-symbols-outlined" style="font-size:16px">save</span> Save Settings</button>
+    </form></div>`;
+    initRichText();
+    return;
   }
-  
-  formModal.classList.remove('hidden');
-  formModal.classList.add('flex');
 
-  // Initialize TinyMCE for rich text areas
-  if (typeof tinymce !== 'undefined') {
-    tinymce.remove();
-    tinymce.init({
-      selector: 'textarea.rich-text',
-      menubar: false,
-      plugins: 'lists link image code table formatpainter',
-      toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | bullist numlist | link image | code',
-      height: 300,
-      skin: "oxide",
-      content_css: "default",
-      setup: function (editor) {
-        editor.on('change', function () {
-          editor.save();
-        });
+  // Books, Categories, Gallery tables
+  area.innerHTML='<div class="empty-state"><span class="material-symbols-outlined animate-spin">refresh</span><p>Loading...</p></div>';
+  try{
+    const snap=await db.collection(currentTab).get();
+    if(snap.empty){area.innerHTML='<div class="empty-state"><span class="material-symbols-outlined">inbox</span><p>No items yet. Click "Add New" to start!</p></div>';return}
+    let rows='';
+    snap.forEach(doc=>{
+      const d=doc.data(),id=doc.id;
+      if(currentTab==='books'){
+        rows+=`<tr><td><div style="display:flex;align-items:center;gap:12px">${d.cover?`<img src="${d.cover}" class="table-img">`:''}
+          <div><div style="font-weight:700">${d.title||''}</div><div style="font-size:12px;color:#94a3b8">${d.author||''}</div></div></div></td>
+          <td><span class="badge">${d.category||''}</span><div style="font-size:12px;color:#94a3b8;margin-top:4px">${d.year||''}</div></td>
+          <td style="text-align:right"><button class="btn btn-sm btn-ghost" onclick="editItem('${id}')"><span class="material-symbols-outlined" style="font-size:16px">edit</span></button>
+          <button class="btn btn-sm btn-danger" onclick="deleteItem('${id}')"><span class="material-symbols-outlined" style="font-size:16px">delete</span></button></td></tr>`;
+      }else if(currentTab==='categories'){
+        rows+=`<tr><td><div style="display:flex;align-items:center;gap:10px"><span class="material-symbols-outlined" style="color:#006a6a">${d.icon||'category'}</span><b>${d.name||''}</b></div></td>
+          <td style="color:#94a3b8">${d.id||''}</td>
+          <td style="text-align:right"><button class="btn btn-sm btn-ghost" onclick="editItem('${id}')"><span class="material-symbols-outlined" style="font-size:16px">edit</span></button>
+          <button class="btn btn-sm btn-danger" onclick="deleteItem('${id}')"><span class="material-symbols-outlined" style="font-size:16px">delete</span></button></td></tr>`;
+      }else if(currentTab==='gallery'){
+        rows+=`<tr><td><div style="display:flex;align-items:center;gap:12px"><img src="${d.url||''}" class="table-thumb"><b>${d.title||''}</b></div></td>
+          <td><span class="badge">${d.category||''}</span></td>
+          <td style="text-align:right"><button class="btn btn-sm btn-ghost" onclick="editItem('${id}')"><span class="material-symbols-outlined" style="font-size:16px">edit</span></button>
+          <button class="btn btn-sm btn-danger" onclick="deleteItem('${id}')"><span class="material-symbols-outlined" style="font-size:16px">delete</span></button></td></tr>`;
       }
     });
+    area.innerHTML=`<div class="data-card"><table><thead><tr><th>Item</th><th>Details</th><th style="text-align:right">Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  }catch(e){area.innerHTML=`<div class="empty-state"><span class="material-symbols-outlined">error</span><p>Error: ${e.message}</p></div>`}
+}
+
+// Forms
+function openAddForm(){editId=null;openFormFor(null)}
+async function editItem(id){
+  editId=id;
+  try{const doc=await db.collection(currentTab).doc(id).get();openFormFor(doc.exists?doc.data():null)}
+  catch(e){showToast('Error loading item','error')}
+}
+async function editPage(pageId){
+  currentTab='pages';editId=pageId;
+  let d={};try{const doc=await db.collection('pages').doc(pageId).get();if(doc.exists)d=doc.data()}catch(e){}
+  openFormFor(d);
+}
+
+function imgField(label,id,current){
+  return `<div class="form-group"><label>${label}</label>
+    <div class="img-upload-zone" onclick="this.querySelector('input').click()">
+      <input type="file" id="${id}" accept="image/*" onchange="previewImg(this,'${id}-prev')">
+      <span class="material-symbols-outlined">cloud_upload</span>
+      <p>Click to select image</p><small>Auto-compressed, no upload delay</small>
+    </div>
+    ${current?`<img src="${current}" class="img-preview" id="${id}-prev">`:`<img class="img-preview hidden" id="${id}-prev">`}
+  </div>`;
+}
+function previewImg(input,prevId){
+  const prev=document.getElementById(prevId);
+  if(input.files&&input.files[0]){
+    const r=new FileReader();r.onload=e=>{prev.src=e.target.result;prev.classList.remove('hidden')};r.readAsDataURL(input.files[0]);
   }
 }
 
-// Save Data — Upload with progress & error handling
-async function uploadFile(file, folder) {
-  if (!window.storage) {
-    throw new Error("Firebase Storage is not available. Please paste a direct URL instead of uploading a file.");
+function openFormFor(d){
+  const form=document.getElementById('data-form');
+  const t=currentTab==='pages'?editId:currentTab;
+
+  if(t==='books'||currentTab==='books'){
+    form.innerHTML=`
+      <div class="form-row"><div class="form-group"><label>Title (English)</label><input id="f-title" value="${d?.title||''}"></div>
+      <div class="form-group"><label>Title (Urdu)</label><input id="f-title-ur" value="${d?.title_ur||''}" dir="rtl"></div></div>
+      <div class="form-row"><div class="form-group"><label>Author</label><input id="f-author" value="${d?.author||'Syed Ejaz Gillani'}"></div>
+      <div class="form-group"><label>Year</label><input id="f-year" value="${d?.year||''}"></div></div>
+      <div class="form-group"><label>Category ID</label><input id="f-cat" value="${d?.category||''}" placeholder="e.g. literature"></div>
+      ${imgField('Cover Image','f-cover',d?.cover)}
+      <div class="form-group"><label>PDF Link</label><input id="f-pdf" value="${d?.pdf_url||''}" placeholder="Google Drive or direct URL">
+        <div class="form-hint">Upload PDF to Google Drive → Share → "Anyone with link" → Paste link here</div></div>
+      <div class="form-group"><label>Description</label><textarea id="f-desc" class="rich-text">${d?.description||''}</textarea></div>`;
+  }else if(t==='categories'||currentTab==='categories'){
+    form.innerHTML=`
+      <div class="form-group"><label>Category ID (no spaces)</label><input id="f-id" value="${d?.id||''}" ${editId?'disabled':''}></div>
+      <div class="form-row"><div class="form-group"><label>Name (English)</label><input id="f-name" value="${d?.name||''}"></div>
+      <div class="form-group"><label>Name (Urdu)</label><input id="f-name-ur" value="${d?.name_ur||''}" dir="rtl"></div></div>
+      <div class="form-group"><label>Material Icon</label><input id="f-icon" value="${d?.icon||'category'}" placeholder="e.g. menu_book">
+        <div class="form-hint"><a href="https://fonts.google.com/icons" target="_blank" style="color:#006a6a">Browse icons here</a></div></div>`;
+  }else if(t==='gallery'||currentTab==='gallery'){
+    form.innerHTML=`
+      <div class="form-group"><label>Title</label><input id="f-gtitle" value="${d?.title||''}"></div>
+      <div class="form-group"><label>Category</label><input id="f-gcat" value="${d?.category||'Events'}" placeholder="Events / Family / Travel"></div>
+      ${imgField('Image','f-gimg',d?.url)}
+      <div class="form-group"><label>Or paste image URL</label><input id="f-gurl" value="${d?.url||''}"></div>`;
+  }else if(editId==='home'){
+    form.innerHTML=`
+      <div class="form-section">Hero Section</div>
+      ${imgField('Hero Image','f-img-hero',d?.imgHero)}
+      <div class="form-group"><label>Title</label><input id="f-hero-title" value="${d?.heroTitle||'Syed Ejaz Gillani'}"></div>
+      <div class="form-group"><label>Subtitle</label><textarea id="f-hero-sub" class="rich-text">${d?.heroSubtitle||''}</textarea></div>
+      <div class="form-section">Floating Card</div>
+      <div class="form-row"><div class="form-group"><label>Tag</label><input id="f-new-tag" value="${d?.newArrivalTag||'New Arrival'}"></div>
+      <div class="form-group"><label>Author</label><input id="f-new-author" value="${d?.newArrivalAuthor||'by Syed Ejaz Gillani'}"></div></div>
+      <div class="form-group"><label>Card Title</label><input id="f-new-title" value="${d?.newArrivalTitle||'Uncover the Latest in Knowledge'}"></div>
+      <div class="form-section">About Section</div>
+      <div class="form-group"><label>About Title</label><input id="f-about-title" value="${d?.aboutTitle||'Read More, Learn More, Grow More'}"></div>
+      <div class="form-group"><label>About Text</label><textarea id="f-about-text" class="rich-text">${d?.aboutText||''}</textarea></div>
+      <div class="form-row"><div class="form-group"><label>Stat 1 Number</label><input id="f-s1n" value="${d?.stat1Num||'7+'}"></div>
+      <div class="form-group"><label>Stat 1 Label</label><input id="f-s1t" value="${d?.stat1Text||'Digital Books'}"></div></div>
+      <div class="form-row"><div class="form-group"><label>Stat 2 Number</label><input id="f-s2n" value="${d?.stat2Num||'120+'}"></div>
+      <div class="form-group"><label>Stat 2 Label</label><input id="f-s2t" value="${d?.stat2Text||'Global Archives'}"></div></div>
+      ${imgField('Archive Image','f-img-archive',d?.imgArchive)}
+      ${imgField('Library Image','f-img-library',d?.imgLibrary)}
+      <div class="form-section">Featured & Categories Headings</div>
+      <div class="form-row"><div class="form-group"><label>Featured Sub</label><input id="f-feat-sub" value="${d?.featuredSub||'Our Curated Selection'}"></div>
+      <div class="form-group"><label>Featured Title</label><input id="f-feat-title" value="${d?.featuredTitle||'Featured Books'}"></div></div>
+      <div class="form-row"><div class="form-group"><label>Categories Title</label><input id="f-cat-title" value="${d?.categoriesTitle||'Browse by Category'}"></div>
+      <div class="form-group"><label>Categories Sub</label><input id="f-cat-sub" value="${d?.categoriesSub||''}"></div></div>
+      <div class="form-group"><label>Newsletter Title</label><input id="f-news-title" value="${d?.newsletterTitle||'Stay Updated with New Archives'}"></div>
+      <div class="form-group"><label>Newsletter Subtitle</label><input id="f-news-sub" value="${d?.newsletterSub||''}"></div>`;
+  }else if(editId==='about'){
+    form.innerHTML=`
+      <div class="form-section">Hero Bio</div>
+      ${imgField('Profile Image','f-img-profile',d?.imgProfile)}
+      <div class="form-group"><label>Tag</label><input id="f-tag" value="${d?.heroTag||'Founder'}"></div>
+      <div class="form-group"><label>Name</label><input id="f-name" value="${d?.heroTitle||'Syed Ejaz Gillani'}"></div>
+      <div class="form-group"><label>Bio</label><textarea id="f-bio" class="rich-text">${d?.heroBio||''}</textarea></div>
+      <div class="form-group"><label>Quote</label><textarea id="f-quote">${d?.quote||''}</textarea></div>
+      <div class="form-section">Our Story</div>
+      <div class="form-group"><label>Title</label><input id="f-title" value="${d?.title||'Our Story'}"></div>
+      <div class="form-group"><label>Subtitle</label><textarea id="f-sub">${d?.subtitle||''}</textarea></div>
+      <div class="form-group"><label>Content</label><textarea id="f-content" class="rich-text">${d?.content||''}</textarea></div>
+      <div class="form-section">Mission & Vision</div>
+      <div class="form-row"><div class="form-group"><label>Mission Title</label><input id="f-miss-t" value="${d?.missionTitle||'Mission'}"></div>
+      <div class="form-group"><label>Vision Title</label><input id="f-vis-t" value="${d?.visionTitle||'Vision'}"></div></div>
+      <div class="form-group"><label>Mission Text</label><textarea id="f-miss-tx">${d?.missionText||''}</textarea></div>
+      <div class="form-group"><label>Vision Text</label><textarea id="f-vis-tx">${d?.visionText||''}</textarea></div>`;
+  }else if(editId==='contact'){
+    form.innerHTML=`
+      <div class="form-section">Contact Info</div>
+      ${imgField('Accent Image','f-img-accent',d?.imgAccent)}
+      ${imgField('Map Image','f-img-map',d?.imgMap)}
+      <div class="form-group"><label>Title</label><input id="f-title" value="${d?.title||"Let's Connect with the Archive."}"></div>
+      <div class="form-group"><label>Subtitle</label><textarea id="f-sub" class="rich-text">${d?.subtitle||''}</textarea></div>
+      <div class="form-group"><label>Address</label><textarea id="f-addr">${d?.address||''}</textarea></div>
+      <div class="form-row"><div class="form-group"><label>Email</label><input id="f-email" value="${d?.email||''}"></div>
+      <div class="form-group"><label>Phone</label><input id="f-phone" value="${d?.phone||''}"></div></div>`;
+  }else if(editId==='gallery'){
+    form.innerHTML=`
+      <div class="form-group"><label>Tag</label><input id="f-tag" value="${d?.tag||'Our Visual Heritage'}"></div>
+      <div class="form-group"><label>Title</label><input id="f-title" value="${d?.title||'Gallery'}"></div>
+      <div class="form-group"><label>Subtitle</label><textarea id="f-sub">${d?.subtitle||''}</textarea></div>`;
   }
-  
-  // Validate file size (max 50MB for PDFs, 10MB for images)
-  const maxSize = folder === 'pdfs' ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
-  if (file.size > maxSize) {
-    throw new Error(`File too large! Max size: ${folder === 'pdfs' ? '50MB' : '10MB'}. Your file: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
-  }
 
-  const storageRef = window.storage.ref();
-  const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-  const fileRef = storageRef.child(`${folder}/${fileName}`);
-  
-  const btn = document.getElementById('save-btn');
-
-  return new Promise((resolve, reject) => {
-    const uploadTask = fileRef.put(file);
-    
-    // Track upload progress
-    uploadTask.on('state_changed',
-      (snapshot) => {
-        const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-        btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Uploading ${pct}%`;
-      },
-      (error) => {
-        console.error("Upload error:", error);
-        if (error.code === 'storage/unauthorized') {
-          reject(new Error("Upload blocked! Go to Firebase Console → Storage → Rules and set: allow read, write;"));
-        } else if (error.code === 'storage/canceled') {
-          reject(new Error("Upload was cancelled."));
-        } else {
-          reject(new Error(`Upload failed: ${error.message}`));
-        }
-      },
-      async () => {
-        try {
-          const url = await uploadTask.snapshot.ref.getDownloadURL();
-          resolve(url);
-        } catch (e) {
-          reject(new Error("Upload completed but failed to get URL: " + e.message));
-        }
-      }
-    );
-
-    // Timeout after 5 minutes
-    setTimeout(() => {
-      uploadTask.cancel();
-      reject(new Error("Upload timed out after 5 minutes. Try a smaller file or paste a URL instead."));
-    }, 5 * 60 * 1000);
-  });
+  openModal(editId?'Edit Item':'Add New Item');
+  setTimeout(initRichText,100);
 }
 
-document.getElementById('save-btn').addEventListener('click', async () => {
-  if(!window.db) return showToast("Firebase not connected!", "error");
-  if (typeof tinymce !== 'undefined') tinymce.triggerSave();
-  
-  const btn = document.getElementById('save-btn');
-  btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Saving...`;
-  btn.disabled = true;
-  
-  try {
-    let payload = {};
-    
-    if (currentTab === 'books') {
-      let coverUrl = document.getElementById('b-cover').value;
-      const coverFile = document.getElementById('b-cover-file')?.files[0];
-      if (coverFile) {
-        btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Uploading Cover...`;
-        coverUrl = await uploadFile(coverFile, 'covers');
-      }
+// Helper to get value safely
+function v(id){const el=document.getElementById(id);return el?el.value:'';}
 
-      let pdfUrl = document.getElementById('b-pdf').value;
-      const pdfFile = document.getElementById('b-pdf-file')?.files[0];
-      if (pdfFile) {
-        btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Uploading PDF...`;
-        pdfUrl = await uploadFile(pdfFile, 'pdfs');
-      }
+// Save
+async function saveData(){
+  if(!window.db)return showToast('Firebase not connected!','error');
+  if(typeof tinymce!=='undefined')tinymce.triggerSave();
+  const btn=document.getElementById('save-btn');
+  btn.innerHTML='<span class="material-symbols-outlined animate-spin">refresh</span> Saving...';btn.disabled=true;
 
-      payload = {
-        title: document.getElementById('b-title').value,
-        title_ur: document.getElementById('b-title-ur').value,
-        author: document.getElementById('b-author').value,
-        year: document.getElementById('b-year').value,
-        category: document.getElementById('b-cat').value,
-        cover: coverUrl,
-        pdf_url: pdfUrl,
-        description: document.getElementById('b-desc').value,
-        id: editId || Date.now().toString()
-      };
-      if(!payload.title || !payload.category) throw new Error("Title and Category required!");
-    } 
-    else if (currentTab === 'categories') {
-      payload = {
-        id: document.getElementById('c-id').value,
-        name: document.getElementById('c-name').value,
-        name_ur: document.getElementById('c-name-ur').value,
-        icon: document.getElementById('c-icon').value
-      };
-      if(!payload.id || !payload.name) throw new Error("ID and Name required!");
-    }
-    else if (currentTab === 'gallery') {
-      let imgUrl = document.getElementById('g-url').value;
-      const imgFile = document.getElementById('g-file')?.files[0];
-      if (imgFile) {
-        btn.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Uploading Image...`;
-        imgUrl = await uploadFile(imgFile, 'gallery');
-      }
-      
-      payload = {
-        title: document.getElementById('g-title').value,
-        category: document.getElementById('g-cat').value,
-        url: imgUrl
-      };
-      if(!payload.url || !payload.title) throw new Error("Title and URL required!");
-    }
-    else if (currentTab === 'pages') {
-      let currentDoc = {};
-      try {
-        const docRes = await window.db.collection('pages').doc(editId).get();
-        if (docRes.exists) currentDoc = docRes.data();
-      } catch (e) {}
-
-      if (editId === 'home') {
-        let imgHeroUrl = currentDoc.imgHero || '';
-        let imgArchiveUrl = currentDoc.imgArchive || '';
-        let imgLibraryUrl = currentDoc.imgLibrary || '';
-        
-        const fHero = document.getElementById('p-img-hero')?.files[0];
-        if (fHero) { btn.innerHTML = `Uploading Hero Image...`; imgHeroUrl = await uploadFile(fHero, 'pages'); }
-        const fArchive = document.getElementById('p-img-archive')?.files[0];
-        if (fArchive) { btn.innerHTML = `Uploading Archive Image...`; imgArchiveUrl = await uploadFile(fArchive, 'pages'); }
-        const fLibrary = document.getElementById('p-img-library')?.files[0];
-        if (fLibrary) { btn.innerHTML = `Uploading Library Image...`; imgLibraryUrl = await uploadFile(fLibrary, 'pages'); }
-
-        payload = {
-          imgHero: imgHeroUrl,
-          imgArchive: imgArchiveUrl,
-          imgLibrary: imgLibraryUrl,
-          heroTitle: document.getElementById('p-hero-title').value,
-          heroSubtitle: document.getElementById('p-hero-sub').value,
-          newArrivalTag: document.getElementById('p-new-tag').value,
-          newArrivalTitle: document.getElementById('p-new-title').value,
-          newArrivalAuthor: document.getElementById('p-new-author').value,
-          aboutTitle: document.getElementById('p-about-title').value,
-          aboutText: document.getElementById('p-about-text').value,
-          stat1Num: document.getElementById('p-stat1-num').value,
-          stat1Text: document.getElementById('p-stat1-text').value,
-          stat2Num: document.getElementById('p-stat2-num').value,
-          stat2Text: document.getElementById('p-stat2-text').value,
-          featuredSub: document.getElementById('p-feat-sub').value,
-          featuredTitle: document.getElementById('p-feat-title').value,
-          categoriesTitle: document.getElementById('p-cat-title').value,
-          categoriesSub: document.getElementById('p-cat-sub').value,
-          newsletterTitle: document.getElementById('p-news-title').value,
-          newsletterSub: document.getElementById('p-news-sub').value
-        };
-      } else if (editId === 'about') {
-        let imgProfileUrl = currentDoc.imgProfile || '';
-        const fProfile = document.getElementById('p-img-profile')?.files[0];
-        if (fProfile) { btn.innerHTML = `Uploading Profile Image...`; imgProfileUrl = await uploadFile(fProfile, 'pages'); }
-
-        payload = {
-          imgProfile: imgProfileUrl,
-          heroTag: document.getElementById('p-about-tag').value,
-          heroTitle: document.getElementById('p-about-hero-title').value,
-          heroBio: document.getElementById('p-about-bio').value,
-          quote: document.getElementById('p-about-quote').value,
-          title: document.getElementById('p-about-title').value,
-          subtitle: document.getElementById('p-about-sub').value,
-          content: document.getElementById('p-about-content').value,
-          missionTitle: document.getElementById('p-miss-title').value,
-          missionText: document.getElementById('p-miss-text').value,
-          visionTitle: document.getElementById('p-vis-title').value,
-          visionText: document.getElementById('p-vis-text').value
-        };
-      } else if (editId === 'contact') {
-        let imgAccentUrl = currentDoc.imgAccent || '';
-        let imgMapUrl = currentDoc.imgMap || '';
-        
-        const fAccent = document.getElementById('p-img-accent')?.files[0];
-        if (fAccent) { btn.innerHTML = `Uploading Accent Image...`; imgAccentUrl = await uploadFile(fAccent, 'pages'); }
-        const fMap = document.getElementById('p-img-map')?.files[0];
-        if (fMap) { btn.innerHTML = `Uploading Map Image...`; imgMapUrl = await uploadFile(fMap, 'pages'); }
-
-        payload = {
-          imgAccent: imgAccentUrl,
-          imgMap: imgMapUrl,
-          title: document.getElementById('p-contact-title').value,
-          subtitle: document.getElementById('p-contact-sub').value,
-          address: document.getElementById('p-contact-address').value,
-          email: document.getElementById('p-contact-email').value,
-          phone: document.getElementById('p-contact-phone').value
-        };
-      } else if (editId === 'gallery') {
-        payload = {
-          tag: document.getElementById('p-gallery-tag').value,
-          title: document.getElementById('p-gallery-title').value,
-          subtitle: document.getElementById('p-gallery-sub').value
-        };
+  try{
+    let payload={};
+    if(currentTab==='books'){
+      const coverImg=await getImageBase64('f-cover');
+      payload={title:v('f-title'),title_ur:v('f-title-ur'),author:v('f-author'),year:v('f-year'),category:v('f-cat'),
+        cover:coverImg||v('f-cover-prev-src')||'',pdf_url:v('f-pdf'),description:v('f-desc'),id:editId||Date.now().toString()};
+      // Keep old cover if no new one selected
+      if(!coverImg&&editId){try{const old=await db.collection('books').doc(editId).get();if(old.exists&&old.data().cover)payload.cover=old.data().cover}catch(e){}}
+      if(!payload.title)throw new Error('Title is required!');
+    }else if(currentTab==='categories'){
+      payload={id:v('f-id'),name:v('f-name'),name_ur:v('f-name-ur'),icon:v('f-icon')};
+      if(!payload.id||!payload.name)throw new Error('ID and Name required!');
+    }else if(currentTab==='gallery'){
+      const galleryImg=await getImageBase64('f-gimg');
+      payload={title:v('f-gtitle'),category:v('f-gcat'),url:galleryImg||v('f-gurl')};
+      if(!galleryImg&&editId&&!v('f-gurl')){try{const old=await db.collection('gallery').doc(editId).get();if(old.exists&&old.data().url)payload.url=old.data().url}catch(e){}}
+      if(!payload.title)throw new Error('Title required!');
+    }else if(currentTab==='pages'){
+      if(editId==='home'){
+        let cur={};try{const d=await db.collection('pages').doc('home').get();if(d.exists)cur=d.data()}catch(e){}
+        const heroImg=await getImageBase64('f-img-hero');
+        const archiveImg=await getImageBase64('f-img-archive');
+        const libraryImg=await getImageBase64('f-img-library');
+        payload={imgHero:heroImg||cur.imgHero||'',imgArchive:archiveImg||cur.imgArchive||'',imgLibrary:libraryImg||cur.imgLibrary||'',
+          heroTitle:v('f-hero-title'),heroSubtitle:v('f-hero-sub'),newArrivalTag:v('f-new-tag'),newArrivalTitle:v('f-new-title'),newArrivalAuthor:v('f-new-author'),
+          aboutTitle:v('f-about-title'),aboutText:v('f-about-text'),stat1Num:v('f-s1n'),stat1Text:v('f-s1t'),stat2Num:v('f-s2n'),stat2Text:v('f-s2t'),
+          featuredSub:v('f-feat-sub'),featuredTitle:v('f-feat-title'),categoriesTitle:v('f-cat-title'),categoriesSub:v('f-cat-sub'),
+          newsletterTitle:v('f-news-title'),newsletterSub:v('f-news-sub')};
+      }else if(editId==='about'){
+        let cur={};try{const d=await db.collection('pages').doc('about').get();if(d.exists)cur=d.data()}catch(e){}
+        const profileImg=await getImageBase64('f-img-profile');
+        payload={imgProfile:profileImg||cur.imgProfile||'',heroTag:v('f-tag'),heroTitle:v('f-name'),heroBio:v('f-bio'),quote:v('f-quote'),
+          title:v('f-title'),subtitle:v('f-sub'),content:v('f-content'),missionTitle:v('f-miss-t'),missionText:v('f-miss-tx'),visionTitle:v('f-vis-t'),visionText:v('f-vis-tx')};
+      }else if(editId==='contact'){
+        let cur={};try{const d=await db.collection('pages').doc('contact').get();if(d.exists)cur=d.data()}catch(e){}
+        const accentImg=await getImageBase64('f-img-accent');
+        const mapImg=await getImageBase64('f-img-map');
+        payload={imgAccent:accentImg||cur.imgAccent||'',imgMap:mapImg||cur.imgMap||'',
+          title:v('f-title'),subtitle:v('f-sub'),address:v('f-addr'),email:v('f-email'),phone:v('f-phone')};
+      }else if(editId==='gallery'){
+        payload={tag:v('f-tag'),title:v('f-title'),subtitle:v('f-sub')};
       }
     }
-    else if (currentTab === 'settings') {
-      payload = {
-        siteTitle: document.getElementById('s-title').value,
-        footerDesc: document.getElementById('s-footer').value,
-        facebookUrl: document.getElementById('s-fb').value,
-        youtubeUrl: document.getElementById('s-yt').value,
-        emailUrl: document.getElementById('s-email').value
-      };
+
+    // Save to Firestore
+    const collection=currentTab==='pages'?'pages':currentTab;
+    const docId=editId||(payload.id&&typeof payload.id==='string'?payload.id:null);
+    if(docId){
+      await db.collection(collection).doc(docId).set(payload,{merge:true});
+    }else{
+      await db.collection(collection).add(payload);
     }
-    if (editId) {
-      await window.db.collection(currentTab).doc(editId).set(payload, { merge: true });
-      showToast("Item updated successfully!");
-    } else {
-      if(payload.id && typeof payload.id === 'string') {
-        await window.db.collection(currentTab).doc(payload.id).set(payload);
-      } else {
-        await window.db.collection(currentTab).add(payload);
-      }
-      showToast("Item created successfully!");
-    }
-    formModal.classList.add('hidden');
-  } catch (error) {
-    console.error("Error saving: ", error);
-    showToast("Error saving: " + error.message, "error");
-  } finally {
-    btn.innerHTML = `Save Item`;
-    btn.disabled = false;
+    showToast(editId?'Updated successfully!':'Created successfully!');
+    closeModal();
+    loadTabContent();
+  }catch(e){
+    console.error('Save error:',e);
+    showToast('Error: '+e.message,'error');
+  }finally{
+    btn.innerHTML='<span class="material-symbols-outlined" style="font-size:16px">save</span> Save Changes';btn.disabled=false;
   }
-});
+}
 
-// Edit & Delete
-window.editItem = async (docId) => {
-  try {
-    const doc = await window.db.collection(currentTab).doc(docId).get();
-    if (doc.exists) {
-      openForm(doc.data(), doc.id);
-    } else {
-      openForm({}, docId);
-    }
-  } catch(e) { showToast("Error fetching document", "error"); }
-};
+// Save settings (inline form, no modal)
+async function saveSettings(){
+  if(!window.db)return showToast('Firebase not connected!','error');
+  if(typeof tinymce!=='undefined')tinymce.triggerSave();
+  try{
+    await db.collection('settings').doc('general').set({
+      siteTitle:v('s-title'),footerDesc:v('s-footer'),facebookUrl:v('s-fb'),youtubeUrl:v('s-yt'),emailUrl:v('s-email')
+    },{merge:true});
+    showToast('Settings saved!');
+  }catch(e){showToast('Error: '+e.message,'error')}
+}
 
-window.deleteItem = async (docId) => {
-  if(confirm("Are you sure you want to delete this item? This action cannot be undone.")) {
-    try {
-      await window.db.collection(currentTab).doc(docId).delete();
-      showToast("Item deleted successfully!");
-    } catch(e) { showToast("Error deleting: " + e.message, "error"); }
-  }
-};
-
-// Toast Notifications System
-function showToast(message, type = "success") {
-  let container = document.getElementById('toast-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'toast-container';
-    container.className = 'fixed bottom-4 right-4 z-50 flex flex-col gap-2';
-    document.body.appendChild(container);
-  }
-  
-  const toast = document.createElement('div');
-  const bgColor = type === 'success' ? 'bg-[#006a6a]' : 'bg-red-500';
-  const icon = type === 'success' ? 'check_circle' : 'error';
-  
-  toast.className = `flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white ${bgColor} transform translate-y-10 opacity-0 transition-all duration-300 ease-out`;
-  toast.innerHTML = `
-    <span class="material-symbols-outlined">${icon}</span>
-    <span class="font-medium text-sm">${message}</span>
-  `;
-  
-  container.appendChild(toast);
-  
-  // Animate in
-  setTimeout(() => {
-    toast.classList.remove('translate-y-10', 'opacity-0');
-  }, 10);
-  
-  // Remove after 3s
-  setTimeout(() => {
-    toast.classList.add('translate-y-10', 'opacity-0');
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
+// Delete
+async function deleteItem(id){
+  if(!confirm('Are you sure? This cannot be undone.'))return;
+  try{await db.collection(currentTab).doc(id).delete();showToast('Deleted!');loadTabContent()}
+  catch(e){showToast('Error: '+e.message,'error')}
 }
