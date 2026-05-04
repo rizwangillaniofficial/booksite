@@ -369,3 +369,121 @@ function sejaz_render_book_card( $book ) {
 	</div>
 	<?php
 }
+
+/**
+ * One-Time Auto Setup for Pages, Menus, Settings, and Books Data
+ */
+add_action('admin_init', 'sejaz_auto_setup_theme');
+function sejaz_auto_setup_theme() {
+    // Only run this once
+    if (get_option('sejaz_setup_completed')) {
+        return;
+    }
+
+    // 1. Create Required Pages
+    $pages = array(
+        'Home' => 'front-page.php',
+        'About' => 'template-about.php',
+        'Contact' => 'template-contact.php'
+    );
+    
+    $home_page_id = 0;
+    foreach ($pages as $title => $template) {
+        $page = get_page_by_title($title);
+        if (!$page) {
+            $page_id = wp_insert_post(array(
+                'post_title'   => $title,
+                'post_status'  => 'publish',
+                'post_type'    => 'page',
+            ));
+            update_post_meta($page_id, '_wp_page_template', $template);
+            if ($title === 'Home') $home_page_id = $page_id;
+        } else {
+            update_post_meta($page->ID, '_wp_page_template', $template);
+            if ($title === 'Home') $home_page_id = $page->ID;
+        }
+    }
+
+    // 2. Set Static Front Page
+    if ($home_page_id) {
+        update_option('show_on_front', 'page');
+        update_option('page_on_front', $home_page_id);
+    }
+
+    // 3. Create Primary Menu
+    $menu_name = 'Main Menu';
+    $menu_exists = wp_get_nav_menu_object($menu_name);
+    if (!$menu_exists) {
+        $menu_id = wp_create_nav_menu($menu_name);
+        
+        $pages_to_add = array('Home', 'About', 'Contact');
+        foreach ($pages_to_add as $p_title) {
+            $p = get_page_by_title($p_title);
+            if ($p) {
+                wp_update_nav_menu_item($menu_id, 0, array(
+                    'menu-item-title'  => $p->post_title,
+                    'menu-item-object-id' => $p->ID,
+                    'menu-item-object' => 'page',
+                    'menu-item-type'   => 'post_type',
+                    'menu-item-status' => 'publish'
+                ));
+            }
+        }
+        
+        // Add Books Archive link
+        wp_update_nav_menu_item($menu_id, 0, array(
+            'menu-item-title'  => 'Books',
+            'menu-item-url'    => home_url('/books/'),
+            'menu-item-type'   => 'custom',
+            'menu-item-status' => 'publish'
+        ));
+
+        $locations = get_theme_mods();
+        $locations['nav_menu_locations'] = array('primary' => $menu_id);
+        set_theme_mod('nav_menu_locations', $locations['nav_menu_locations']);
+    }
+
+    // 4. Fix Books Data (PDFs and Slugs)
+    $books = get_posts(array(
+        'post_type' => 'book',
+        'numberposts' => -1,
+        'post_status' => 'any'
+    ));
+
+    foreach ($books as $book) {
+        $pdf_url = get_post_meta($book->ID, '_book_pdf_url', true);
+        
+        // If PDF URL is empty, try to find an attached PDF in the media library
+        if (empty($pdf_url)) {
+            $attachments = get_posts(array(
+                'post_type' => 'attachment',
+                'posts_per_page' => 1,
+                'post_parent' => $book->ID,
+                'post_mime_type' => 'application/pdf'
+            ));
+
+            if ($attachments) {
+                $found_pdf_url = wp_get_attachment_url($attachments[0]->ID);
+                update_post_meta($book->ID, '_book_pdf_url', $found_pdf_url);
+            } else {
+                // Check if there is a PDF link inside the post content
+                if (preg_match('/href=["\']([^"\']+\.pdf)["\']/i', $book->post_content, $matches)) {
+                    update_post_meta($book->ID, '_book_pdf_url', $matches[1]);
+                }
+            }
+        }
+
+        // Clean up Urdu slugs by generating a random readable English slug if it's purely urlencoded Urdu
+        // WordPress converts Urdu to %d8%...
+        if (strpos($book->post_name, '%') !== false) {
+            $new_slug = 'book-' . $book->ID . '-' . strtolower(wp_generate_password(4, false));
+            wp_update_post(array(
+                'ID' => $book->ID,
+                'post_name' => $new_slug
+            ));
+        }
+    }
+
+    // Mark as completed
+    update_option('sejaz_setup_completed', 1);
+}
