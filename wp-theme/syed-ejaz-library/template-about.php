@@ -16,7 +16,7 @@ get_header(); ?>
                 </div>
                 <div class="lg:w-5/12 lg:sticky lg:top-32">
                     <div class="relative rounded-xl overflow-hidden shadow-2xl">
-                        <img alt="Portrait" class="w-full h-auto object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-700" src="<?php echo SEJAZ_URI; ?>/assets/images/founder_portrait.png" onerror="this.src='https://lh3.googleusercontent.com/aida/ADBb0uiPj9eWgH0FhQF9hDQv8R4KC2jtj8zIs3Lk7m1dktzLrMrdPVrtMhsj9KJP3nU8VgLv3oKPx4XRJChjrRwK8YJdl1hP08RIL8ydH8ev-AS791Lin1m2kwfByXl4LJ4BXWLshLkpaKaPZk3hUF-PJvAJIQgxPoFqgcQ7L4z-XrDn6plxfP8heme2Mo18OOG-0FV8n-jVb406D5ddXRZplgPkJYgKrdpYSHLb4PMkNHf1TOGxjfN5A6LEryAihnBgfg7TLy9oIzVwww';">
+                        <img alt="Portrait" class="w-full h-auto object-cover grayscale-[20%] hover:grayscale-0 transition-all duration-700" src="<?php echo SEJAZ_URI; ?>/assets/images/founder_portrait.png">
                     </div>
                     <div class="mt-16 bg-white dark:bg-slate-800 p-8 rounded-xl border border-outline-variant/30 text-center">
                         <p class="italic text-on-surface-variant dark:text-slate-300 mb-6"><?php echo esc_html(get_theme_mod('sejaz_about_p_quote', '"Knowledge is a universal heritage, and digital preservation is our duty to the future."')); ?></p>
