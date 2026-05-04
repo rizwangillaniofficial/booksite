@@ -1,0 +1,141 @@
+/*
+Theme Name: Syed Ejaz Digital Library
+Theme URI: https://syedejazgillani.com
+Author: Syed Ejaz Gillani
+Author URI: https://syedejazgillani.com
+Description: A premium digital library theme for showcasing books, categories, and gallery with dark mode support.
+Version: 1.0.0
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: sejaz-library
+Tags: library, books, dark-mode, custom-post-types, responsive
+Requires at least: 6.0
+Tested up to: 6.5
+Requires PHP: 7.4
+*/
+
+/* ============================================
+   Syed Ejaz Gillani Digital Library
+   WordPress Theme Styles
+   ============================================ */
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Gradients */
+.gradient-cta {
+  background: linear-gradient(135deg, #006a6a 0%, #0132c5 100%);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+}
+.gradient-brand {
+  background: linear-gradient(135deg, #006a6a 0%, #0132c5 100%);
+}
+.gradient-button {
+  background: linear-gradient(135deg, #006a6a 0%, #0132c5 100%);
+}
+.text-gradient {
+  background: linear-gradient(135deg, #454749 0%, #006a6a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glass Morphism */
+.glass-nav {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Mobile Menu */
+#mobile-menu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#mobile-menu.open {
+  max-height: 500px;
+}
+
+/* Scroll Animations */
+.fade-up {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Book Card Hover */
+.book-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.book-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Category Card Hover */
+.cat-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.cat-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+/* Read Button Hover */
+.read-btn {
+  transition: background-color 0.3s, color 0.3s, transform 0.2s;
+}
+.read-btn:hover {
+  background-color: #006a6a !important;
+  color: white !important;
+  transform: scale(1.02);
+}
+
+/* Urdu Text */
+.urdu-text {
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', serif;
+  direction: rtl;
+}
+
+/* Dark Mode Overrides */
+html.dark body {
+  background-color: #111517;
+}
+html.dark .bg-surface { background-color: #111517; }
+html.dark .bg-surface-container-low { background-color: #191c1d; }
+html.dark .bg-surface-container-lowest { background-color: #0d1012; }
+html.dark .bg-surface-container-high { background-color: #1e2224; }
+html.dark .text-on-surface { color: #e1e3e4; }
+html.dark .text-primary { color: #c6c6c9; }
+
+html {
+  scroll-behavior: smooth;
+}
+::selection {
+  background-color: #9deeed;
+  color: #002020;
+}
+
+/* Gallery Card */
+.gallery-card:hover img {
+  transform: scale(1.05);
+}
+
+/* Premium Frame */
+.premium-frame {
+  position: relative;
+}
+.premium-frame::before {
+  content: '';
+  position: absolute;
+  top: -8px; left: -8px; right: -8px; bottom: -8px;
+  background: linear-gradient(135deg, #006a6a 0%, #0132c5 100%);
+  border-radius: 1rem;
+  z-index: -1;
+  opacity: 0.15;
+}

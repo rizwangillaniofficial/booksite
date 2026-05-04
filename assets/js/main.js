@@ -230,7 +230,7 @@ function renderBookCard(book) {
         <p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">${book.description}</p>
         <div class="mt-auto flex gap-2">
           <a href="reader.html?id=${book.id}" class="read-btn flex-1 py-2.5 bg-gray-100 dark:bg-slate-700 text-on-surface dark:text-white font-headline font-semibold rounded-lg text-sm text-center block">Read Online</a>
-          ${book.pdf_url ? `<a href="${book.pdf_url}" download class="py-2.5 px-3 bg-gray-100 dark:bg-slate-700 text-on-surface dark:text-white rounded-lg hover:bg-[#006a6a] hover:text-white transition-all"><span class="material-symbols-outlined text-[18px]">download</span></a>` : ''}
+          ${book.pdf_url ? `<a href="${book.pdf_url.replace('/preview','/view')}" target="_blank" rel="noopener noreferrer" class="py-2.5 px-3 bg-gray-100 dark:bg-slate-700 text-on-surface dark:text-white rounded-lg hover:bg-[#006a6a] hover:text-white transition-all" title="Open PDF"><span class="material-symbols-outlined text-[18px]">open_in_new</span></a>` : ''}
         </div>
       </div>
     </div>`;

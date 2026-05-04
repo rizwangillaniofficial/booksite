@@ -1,5 +1,17 @@
 /* Admin CRUD - Load, Save, Delete, Forms */
 
+// Auto-convert Google Drive URLs to embeddable /preview format
+function convertToGDriveEmbed(url) {
+  if (!url) return '';
+  const fileMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fileMatch) return `https://drive.google.com/file/d/${fileMatch[1]}/preview`;
+  const openMatch = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
+  if (openMatch) return `https://drive.google.com/file/d/${openMatch[1]}/preview`;
+  const idMatch = url.match(/drive\.google\.com.*[?&]id=([a-zA-Z0-9_-]+)/);
+  if (idMatch) return `https://drive.google.com/file/d/${idMatch[1]}/preview`;
+  return url; // Not a Drive link, return as-is
+}
+
 // Load tab content
 async function loadTabContent(){
   const area=document.getElementById('tab-content');
@@ -121,7 +133,7 @@ function openFormFor(d){
       <div class="form-group"><label>Category ID</label><input id="f-cat" value="${d?.category||''}" placeholder="e.g. literature"></div>
       ${imgField('Cover Image','f-cover',d?.cover)}
       <div class="form-group"><label>PDF Link</label><input id="f-pdf" value="${d?.pdf_url||''}" placeholder="Google Drive or direct URL">
-        <div class="form-hint">Upload PDF to Google Drive → Share → "Anyone with link" → Paste link here</div></div>
+        <div class="form-hint">📌 Upload PDF to Google Drive → Share → "Anyone with link" → Paste link here. URL is auto-converted!</div></div>
       <div class="form-group"><label>Description</label><textarea id="f-desc" class="rich-text">${d?.description||''}</textarea></div>`;
   }else if(t==='categories'||currentTab==='categories'){
     form.innerHTML=`
@@ -214,8 +226,10 @@ async function saveData(){
     let payload={};
     if(currentTab==='books'){
       const coverImg=await getImageBase64('f-cover');
+      const rawPdfUrl = v('f-pdf');
+      const pdfUrl = convertToGDriveEmbed(rawPdfUrl);
       payload={title:v('f-title'),title_ur:v('f-title-ur'),author:v('f-author'),year:v('f-year'),category:v('f-cat'),
-        cover:coverImg||v('f-cover-prev-src')||'',pdf_url:v('f-pdf'),description:v('f-desc'),id:editId||Date.now().toString()};
+        cover:coverImg||v('f-cover-prev-src')||'',pdf_url:pdfUrl,description:v('f-desc'),id:editId||Date.now().toString()};
       // Keep old cover if no new one selected
       if(!coverImg&&editId){try{const old=await db.collection('books').doc(editId).get();if(old.exists&&old.data().cover)payload.cover=old.data().cover}catch(e){}}
       if(!payload.title)throw new Error('Title is required!');
