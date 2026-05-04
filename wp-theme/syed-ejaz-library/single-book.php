@@ -45,7 +45,7 @@ $pdf_url = $book['pdf_url'];
         <?php if ($pdf_url): ?>
             <div class="w-full">
                 <!-- 3D FlipBook Plugin Shortcode -->
-                <?php echo do_shortcode('[3d-flip-book mode="fullscreen" urlpdf="' . esc_url($pdf_url) . '"][/3d-flip-book]'); ?>
+                <?php echo do_shortcode('[3d-flip-book mode="fullscreen" pdf="' . esc_url($pdf_url) . '"][/3d-flip-book]'); ?>
                 <!-- Fallback or alternative shortcode if you are using DearFlip: echo do_shortcode('[dflip source="' . esc_url($pdf_url) . '"][/dflip]'); -->
             </div>
             <div class="text-center mt-8 py-3">
