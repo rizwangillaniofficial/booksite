@@ -44,14 +44,16 @@ $pdf_url = $book['pdf_url'];
     <div class="bg-surface-container-lowest rounded-xl shadow-lg p-8 md:p-12 min-h-[600px]">
         <?php if ($pdf_url): ?>
             <div class="w-full">
-                <iframe src="<?php echo esc_url($pdf_url); ?>" class="w-full h-[800px] rounded-lg" frameborder="0" allowfullscreen></iframe>
+                <!-- 3D FlipBook Plugin Shortcode -->
+                <?php echo do_shortcode('[3d-flip-book mode="fullscreen" urlpdf="' . esc_url($pdf_url) . '"][/3d-flip-book]'); ?>
+                <!-- Fallback or alternative shortcode if you are using DearFlip: echo do_shortcode('[dflip source="' . esc_url($pdf_url) . '"][/dflip]'); -->
             </div>
-            <div class="text-center mt-4 py-3">
-                <p class="text-sm text-slate-400 mb-2">Can't see the PDF? Make sure it's shared publicly on Google Drive.</p>
-                <a href="<?php echo esc_url(str_replace('/preview', '/view', $pdf_url)); ?>" target="_blank" rel="noopener noreferrer"
+            <div class="text-center mt-8 py-3">
+                <p class="text-sm text-slate-400 mb-2">Having trouble viewing the book?</p>
+                <a href="<?php echo esc_url($pdf_url); ?>" target="_blank" rel="noopener noreferrer"
                    class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#006a6a] text-white rounded-full font-semibold text-sm hover:bg-[#005555] transition-all">
-                    <span class="material-symbols-outlined text-[18px]">open_in_new</span>
-                    Open PDF Directly
+                    <span class="material-symbols-outlined text-[18px]">file_download</span>
+                    Download / Open PDF Directly
                 </a>
             </div>
         <?php else: ?>
